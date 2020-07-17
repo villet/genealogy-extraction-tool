@@ -11,15 +11,12 @@ def initialize_entry(page_number):
     Args:
         (integer) page - Page number
     Returns:
-        (int) entry_id - entry ID
+        (int) entry_id - Entry ID
     """
-
-#    # Change ' with '' for SQL input compatibility
-#    if name.find('\'') != -1:
-#        name.replace('\'', '\'\'')
 
     sql = """INSERT INTO entries(page_number) VALUES({})
           RETURNING entry_id;"""
+
     conn = None
     entry_id = None
     try:
@@ -46,10 +43,26 @@ def initialize_entry(page_number):
     return entry_id
 
 def update_names(entry_id, first_names, last_name):
-    """ update vendor name based on the vendor id """
+    """
+    Update person's first and last names
+
+    Args:
+        (integer) entry_id - Entry ID
+        (string) first_names - Person's first and middle names
+        (string) last_name - Person's last (maiden name)
+    Returns:
+        (int) updated_rows - How many rows updated
+    """
+
     sql = """ UPDATE entries
                 SET first_names = '{}', last_name = '{}'
                 WHERE entry_id = {}"""
+
+#    # Change ' with '' for SQL input compatibility
+#    if name.find('\'') != -1:
+#        name.replace('\'', '\'\'')
+
+
     conn = None
     updated_rows = 0
     try:
@@ -76,7 +89,17 @@ def update_names(entry_id, first_names, last_name):
     return updated_rows
 
 def update_date(entry_id, event_type, date):
-    """ update vendor name based on the vendor id """
+    """
+    Update a date value in an entry
+
+    Args:
+        (integer) entry_id - Entry ID
+        (string) event_type - Type of event matching with a column (birth etc.)
+        (string) date - Date in "YYYY-MM-DD" format
+    Returns:
+        (int) updated_rows - How many rows updated
+    """
+
     sql = """ UPDATE entries
                 SET {}_date = {}
                 WHERE entry_id = {}"""
@@ -112,10 +135,24 @@ def update_date(entry_id, event_type, date):
     return updated_rows
 
 def update_place(entry_id, event_type, place):
-    """ update vendor name based on the vendor id """
+    """
+    Update a place value in an entry
+
+    Args:
+        (integer) entry_id - Entry ID
+        (string) event_type - Type of event matching with a column (birth etc.)
+        (string) place - Name of place
+    Returns:
+        (int) updated_rows - How many rows updated
+    """
+
     sql = """ UPDATE entries
                 SET {}_place = {}
                 WHERE entry_id = {}"""
+
+#    # Change ' with '' for SQL input compatibility
+#    if name.find('\'') != -1:
+#        name.replace('\'', '\'\'')
 
     if len(place) == 0:
         place = 'NULL'
@@ -148,7 +185,15 @@ def update_place(entry_id, event_type, place):
     return updated_rows
 
 def convert_date_dmy_to_ymd(date):
-    """ Presumes input format dd.mm.yyyy """
+    """
+    Conver DD.MM.YYYY (German) date format to YYYY-MM-DD (ISO) date format
+
+    Args:
+        (string) date - date in DD.MM.YYYY format
+    Returns:
+        (string) date - date in YYYY-MM-DD format (or original if not able to convert)
+    """
+
     if date:
         date_parts = date.split('.')
         if len(date_parts) == 3:
@@ -163,7 +208,16 @@ def convert_date_dmy_to_ymd(date):
     return date
 
 def update_number_of_children(entry_id, number_of_children):
-    """ update vendor name based on the vendor id """
+    """
+    Update number of children in an entry
+
+    Args:
+        (integer) entry_id - Entry ID
+        (integer) number_of_children - Number of known children
+    Returns:
+        (int) updated_rows - How many rows updated
+    """
+
     sql = """ UPDATE entries
                 SET number_of_children = {}
                 WHERE entry_id = {}"""
@@ -197,7 +251,16 @@ def update_number_of_children(entry_id, number_of_children):
     return updated_rows
 
 def update_comments(entry_id, comments):
-    """ update vendor name based on the vendor id """
+    """
+    Update a comment value in an entry
+
+    Args:
+        (integer) entry_id - Entry ID
+        (string) comments - Comments about the entry
+    Returns:
+        (int) updated_rows - How many rows updated
+    """
+
     sql = """ UPDATE entries
                 SET comments = {}
                 WHERE entry_id = {}"""
@@ -206,6 +269,10 @@ def update_comments(entry_id, comments):
         comments = 'NULL'
     else:
         comments = "'" + comments + "'" # added string need to be within '-characters
+
+#    # Change ' with '' for SQL input compatibility
+#    if name.find('\'') != -1:
+#        name.replace('\'', '\'\'')
 
     conn = None
     updated_rows = 0
@@ -234,7 +301,13 @@ def update_comments(entry_id, comments):
 
 
 def get_entry(entry_id):
-    """ query data from the vendors table """
+    """
+    Get and display an entry from database
+
+    Args:
+        (integer) entry_id - Entry ID
+    """
+
     conn = None
     try:
         params = config()
