@@ -85,21 +85,27 @@ def update_names(person_id, first_names, last_name):
 
     return updated_rows
 
-def update_date(person_id, event_type, date):
+def update_date(value_id, event_type, date):
     """
-    Update a date value in a person
+    Update a date value in a person or relationship
 
     Args:
-        (integer) person_id - Person ID
+        (integer) value_id - Person or relationship ID
         (string) event_type - Type of event matching with a column (birth etc.)
         (string) date - Date in "YYYY-MM-DD" format
     Returns:
         (int) updated_rows - How many rows updated
     """
 
-    sql = """ UPDATE persons
-                SET {}_date = {}
-                WHERE person_id = {}"""
+    sql = None
+    if event_type in ('birth', 'death'):
+        sql = """ UPDATE persons
+                    SET {}_date = {}
+                    WHERE person_id = {}"""
+    elif event_type in ('marriage', 'divorce'):
+        sql = """ UPDATE relationships
+                    SET {}_date = {}
+                    WHERE relationship_id = {}"""
 
     if len(date) == 0:
         date = 'NULL'
@@ -116,7 +122,7 @@ def update_date(person_id, event_type, date):
         # create a new cursor
         cur = conn.cursor()
         # execute the UPDATE  statement
-        cur.execute(sql.format(event_type, date, person_id))
+        cur.execute(sql.format(event_type, date, value_id))
         # get the number of updated rows
         updated_rows = cur.rowcount
         # Commit the changes to the database
@@ -131,21 +137,27 @@ def update_date(person_id, event_type, date):
 
     return updated_rows
 
-def update_place(person_id, event_type, place):
+def update_place(value_id, event_type, place):
     """
-    Update a place value in a person
+    Update a place value in a person or relationship
 
     Args:
-        (integer) person_id - Person ID
+        (integer) id - Person or relationship ID
         (string) event_type - Type of event matching with a column (birth etc.)
         (string) place - Name of place
     Returns:
         (int) updated_rows - How many rows updated
     """
 
-    sql = """ UPDATE persons
-                SET {}_place = {}
-                WHERE person_id = {}"""
+    sql = None
+    if event_type in ('birth', 'death'):
+        sql = """ UPDATE persons
+                    SET {}_place = {}
+                    WHERE person_id = {}"""
+    elif event_type in ('marriage', 'divorce'):
+        sql = """ UPDATE relationships
+                    SET {}_place = {}
+                    WHERE relationship_id = {}"""
 
 #    # Change ' with '' for SQL input compatibility
 #    if name.find('\'') != -1:
@@ -166,7 +178,7 @@ def update_place(person_id, event_type, place):
         # create a new cursor
         cur = conn.cursor()
         # execute the UPDATE  statement
-        cur.execute(sql.format(event_type, place, person_id))
+        cur.execute(sql.format(event_type, place, value_id))
         # get the number of updated rows
         updated_rows = cur.rowcount
         # Commit the changes to the database
@@ -247,20 +259,27 @@ def update_number_of_children(person_id, number_of_children):
 
     return updated_rows
 
-def update_comments(person_id, comments):
+def update_comments(value_id, type, comments):
     """
     Update a comment value in a person
 
     Args:
-        (integer) person_id - Person ID
-        (string) comments - Comments about the person
+        (integer) value_id - Person or relationship ID
+        (string) type - 'person' or 'relationship'
+        (string) comments - Comments about the person or relationship
     Returns:
         (int) updated_rows - How many rows updated
     """
 
-    sql = """ UPDATE persons
-                SET comments = {}
-                WHERE person_id = {}"""
+    sql = None
+    if type == 'person':
+        sql = """ UPDATE persons
+                    SET comments = {}
+                    WHERE person_id = {}"""
+    elif type == 'relationship':
+        sql = """ UPDATE relationships
+                    SET comments = {}
+                    WHERE relationship_id = {}"""
 
     if len(comments) == 0:
         comments = 'NULL'
@@ -281,7 +300,7 @@ def update_comments(person_id, comments):
         # create a new cursor
         cur = conn.cursor()
         # execute the UPDATE  statement
-        cur.execute(sql.format(comments, person_id))
+        cur.execute(sql.format(comments, value_id))
         # get the number of updated rows
         updated_rows = cur.rowcount
         # Commit the changes to the database
@@ -350,25 +369,152 @@ def add_person(page_number):
     update_date(person_id, 'death', convert_date_dmy_to_ymd(death_date))
     update_place(person_id, 'death', death_place)
 
-    update_comments(person_id, comments)
+    update_comments(person_id, 'person', comments)
 
     get_person(person_id)
+
+def add_relationship(partner1_id):
+    """ Add a relationship """
+
+    partner1_provided = None
+    if partner1_id:
+        partner1_provided = True
+        print('Adding a relationship for {}'.format(partner1_id))
+    else:
+        partner1_provided = False
+
+    partner2_id = None
+    relationship_marriage = None
+    marriage_date = None
+    marriage_place = None
+    divorce_date = None
+    divorce_place = None
+    comments = None
+
+    review_finished = True
+    while review_finished:
+
+        if not partner1_provided:
+            partner1_id = input('- Partner 1 ID: ')
+
+        partner2_id = input('- Partner 2 ID (if known): ')
+        if len(partner2_id) == 0:
+            partner2_id = None
+
+        relationship_marriage = input('- Married (Y/n)?: ')
+
+        if relationship_marriage not in ('n', 'N'):
+            marriage_date = input('- Married date: ')
+            marriage_place = input('- Married place: ')
+            divorce_date = input('- Divorce date: ')
+            divorce_place = input('- Divorce place: ')
+
+        comments = input('- Comments about relationship: ')
+
+        print('Review input:')
+        print('- Partner 1 ID: {}'.format(partner1_id))
+        print('- Partner 2 ID: {}'.format(partner2_id))
+        # print('- Married: {}'. format(relationship_marriage))
+        if relationship_marriage not in ('n', 'N'):
+            print('- Marriage date: {}'.format(marriage_date))
+            print('- Marriage place: {}'.format(marriage_place))
+            print('- Divorce date: {}'.format(divorce_date))
+            print('- Divorce place: {}'.format(divorce_place))
+
+        print('- Comments about relationship: {}'.format(comments))
+
+        ok_to_proceed = input('Everything looks correct (Y/n)?')
+        if ok_to_proceed not in ('n', 'N'):
+            review_finished = False
+
+    relationship_id = initialize_relationship(partner1_id, partner2_id)
+
+    if relationship_marriage not in ('n', 'N'):
+        update_date(relationship_id, 'marriage', convert_date_dmy_to_ymd(marriage_date))
+        update_place(relationship_id, 'marriage', marriage_place)
+        update_date(relationship_id, 'divorce', convert_date_dmy_to_ymd(divorce_date))
+        update_place(relationship_id, 'divorce', divorce_place)
+
+    update_comments(relationship_id, 'relationship', comments)
+
+def initialize_relationship(partner1_id, partner2_id):
+    """
+    Inserts a relationship into database
+
+    Args:
+        (integer) partner1_id - Person ID for partner 1
+        (integer) partner2_id - Person ID for partner 2 ('None' if not known)
+    Returns:
+        (int) relationship_id - Relationship ID
+    """
+
+    sql = """INSERT INTO relationships(person_id_partner1, person_id_partner2) VALUES({}, {})
+          RETURNING relationship_id;"""
+
+    if partner2_id is None:
+        partner2_id = 'NULL'
+
+    conn = None
+    relationship_id = None
+    try:
+        # read database configuration
+        params = config()
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the INSERT statement
+        cur.execute(sql.format(partner1_id, partner2_id))
+        # get the generated UID back
+        relationship_id = cur.fetchone()[0]
+        # commit the changes to the database
+        conn.commit()
+        # close communication with the database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return relationship_id
 
 def main():
     """ Main function """
 
-    page_number = None
-    add_more_persons = True
-    while add_more_persons:
-        if not page_number:
-            page_number = input('Provide page number: ')
-        else:
-            page_number_new = input('Provide page number (default {}): '.format(page_number))
-            if len(page_number_new) != 0:
-                page_number = page_number_new
-        # CHECK IF PAGE IS REALLY INT
+    # Ask to add or modify
 
-        add_person(page_number)
+    # Ask to add information
+
+    add_type = input('Add (p)person, (r)elationship or (c)hild? ')
+
+    if add_type in ('p', 'person', 'P', 'Person'):
+        page_number = None
+        add_more_persons = True
+        while add_more_persons:
+            if not page_number:
+                page_number = input('Provide page number: ')
+                # CHECK IF PAGE IS REALLY INT
+            else:
+                page_number_new = input('Provide page number (default {}): '.format(page_number))
+                if len(page_number_new) != 0:
+                    page_number = page_number_new
+                    # CHECK IF PAGE IS REALLY INT
+
+            add_person(page_number)
+
+            input_more_persons = input('Add more persons (Y/n)?')
+            if input_more_persons in ('n', 'N'):
+                add_more_persons = False
+
+    elif add_type in ('r', 'relationship', 'R', 'Relationship'):
+        add_relationship(None)
+
+    elif add_type in ('c', 'child', 'C', 'Child'):
+        print('Not implemented yet')
+
+    else:
+        print('Unknown entry')
 
 if __name__ == "__main__":
     main()
