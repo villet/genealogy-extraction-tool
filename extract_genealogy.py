@@ -1,8 +1,5 @@
-import sys
 import psycopg2
 from config import config
-
-INPUT_FILE = 'input.html'
 
 def initialize_entry(page_number):
     """
@@ -328,49 +325,50 @@ def get_entry(entry_id):
         if conn is not None:
             conn.close()
 
+def add_person(page_number):
+    """ Add a person """
+
+    print('Add a new entry in database:')
+
+    # MAKE ENTRY AS AN OBJECT
+    first_names = input('- First names: ')
+    last_name = input('- Last name: ')
+
+    birth_date = input('- Birth date: ') # different date formats
+    birth_place = input('- Birth place: ')
+    death_date = input('- Death date: ')
+    death_place = input('- Death place: ')
+    comments = input('- Additional comments: ')
+
+    # Checks and adds user to database
+    entry_id = initialize_entry(page_number)
+    update_names(entry_id, first_names, last_name)
+
+    update_date(entry_id, 'birth', convert_date_dmy_to_ymd(birth_date))
+    update_place(entry_id, 'birth', birth_place)
+
+    update_date(entry_id, 'death', convert_date_dmy_to_ymd(death_date))
+    update_place(entry_id, 'death', death_place)
+
+    update_comments(entry_id, comments)
+
+    get_entry(entry_id)
 
 def main():
     """ Main function """
 
-    page_number = input('Provide page of extraction: ')
-    # CHECK IF PAGE IS REALLY INT
-
+    page_number = None
     add_more_entries = True
     while add_more_entries:
+        if not page_number:
+            page_number = input('Provide page number: ')
+        else:
+            page_number_new = input('Provide page number (default {}): '.format(page_number))
+            if len(page_number_new) != 0:
+                page_number = page_number_new
+        # CHECK IF PAGE IS REALLY INT
 
-        print('Add a new entry in database:')
-
-        # MAKE ENTRY AS AN OBJECT
-        first_names = input('- First names: ')
-        last_name = input('- Last name: ')
-
-        birth_date = input('- Birth date: ') # different date formats
-        birth_place = input('- Birth place: ')
-        death_date = input('- Death date: ')
-        death_place = input('- Death place: ')
-        marriage_date = input('- Married date: ')
-        marriage_place = input('- Married place: ')
-        number_of_children = input('- Number of children: ')
-        comments = input('- Additional comments: ')
-
-        # Checks and adds user to database
-        entry_id = initialize_entry(page_number)
-        update_names(entry_id, first_names, last_name)
-
-        update_date(entry_id, 'birth', convert_date_dmy_to_ymd(birth_date))
-        update_place(entry_id, 'birth', birth_place)
-
-        update_date(entry_id, 'death', convert_date_dmy_to_ymd(death_date))
-        update_place(entry_id, 'death', death_place)
-
-        update_date(entry_id, 'marriage', convert_date_dmy_to_ymd(marriage_date))
-        update_place(entry_id, 'marriage', marriage_place)
-
-        update_number_of_children(entry_id, number_of_children)
-        update_comments(entry_id, comments)
-
-        get_entry(entry_id)
-
+        add_person(page_number)
 
 if __name__ == "__main__":
     main()
