@@ -1,21 +1,21 @@
 import psycopg2
 from config import config
 
-def initialize_entry(page_number):
+def initialize_person(page_number):
     """
-    Inserts an entry into database
+    Inserts a person into database
 
     Args:
         (integer) page - Page number
     Returns:
-        (int) entry_id - Entry ID
+        (int) person_id - Person ID
     """
 
-    sql = """INSERT INTO entries(page_number) VALUES({})
-          RETURNING entry_id;"""
+    sql = """INSERT INTO persons(page_number) VALUES({})
+          RETURNING person_id;"""
 
     conn = None
-    entry_id = None
+    person_id = None
     try:
         # read database configuration
         params = config()
@@ -26,7 +26,7 @@ def initialize_entry(page_number):
         # execute the INSERT statement
         cur.execute(sql.format(page_number))
         # get the generated UID back
-        entry_id = cur.fetchone()[0]
+        person_id = cur.fetchone()[0]
         # commit the changes to the database
         conn.commit()
         # close communication with the database
@@ -37,23 +37,23 @@ def initialize_entry(page_number):
         if conn is not None:
             conn.close()
 
-    return entry_id
+    return person_id
 
-def update_names(entry_id, first_names, last_name):
+def update_names(person_id, first_names, last_name):
     """
     Update person's first and last names
 
     Args:
-        (integer) entry_id - Entry ID
+        (integer) person_id - Person ID
         (string) first_names - Person's first and middle names
         (string) last_name - Person's last (maiden name)
     Returns:
         (int) updated_rows - How many rows updated
     """
 
-    sql = """ UPDATE entries
+    sql = """ UPDATE persons
                 SET first_names = '{}', last_name = '{}'
-                WHERE entry_id = {}"""
+                WHERE person_id = {}"""
 
 #    # Change ' with '' for SQL input compatibility
 #    if name.find('\'') != -1:
@@ -70,7 +70,7 @@ def update_names(entry_id, first_names, last_name):
         # create a new cursor
         cur = conn.cursor()
         # execute the UPDATE  statement
-        cur.execute(sql.format(first_names, last_name, entry_id))
+        cur.execute(sql.format(first_names, last_name, person_id))
         # get the number of updated rows
         updated_rows = cur.rowcount
         # Commit the changes to the database
@@ -85,21 +85,21 @@ def update_names(entry_id, first_names, last_name):
 
     return updated_rows
 
-def update_date(entry_id, event_type, date):
+def update_date(person_id, event_type, date):
     """
-    Update a date value in an entry
+    Update a date value in a person
 
     Args:
-        (integer) entry_id - Entry ID
+        (integer) person_id - Person ID
         (string) event_type - Type of event matching with a column (birth etc.)
         (string) date - Date in "YYYY-MM-DD" format
     Returns:
         (int) updated_rows - How many rows updated
     """
 
-    sql = """ UPDATE entries
+    sql = """ UPDATE persons
                 SET {}_date = {}
-                WHERE entry_id = {}"""
+                WHERE person_id = {}"""
 
     if len(date) == 0:
         date = 'NULL'
@@ -116,7 +116,7 @@ def update_date(entry_id, event_type, date):
         # create a new cursor
         cur = conn.cursor()
         # execute the UPDATE  statement
-        cur.execute(sql.format(event_type, date, entry_id))
+        cur.execute(sql.format(event_type, date, person_id))
         # get the number of updated rows
         updated_rows = cur.rowcount
         # Commit the changes to the database
@@ -131,21 +131,21 @@ def update_date(entry_id, event_type, date):
 
     return updated_rows
 
-def update_place(entry_id, event_type, place):
+def update_place(person_id, event_type, place):
     """
-    Update a place value in an entry
+    Update a place value in a person
 
     Args:
-        (integer) entry_id - Entry ID
+        (integer) person_id - Person ID
         (string) event_type - Type of event matching with a column (birth etc.)
         (string) place - Name of place
     Returns:
         (int) updated_rows - How many rows updated
     """
 
-    sql = """ UPDATE entries
+    sql = """ UPDATE persons
                 SET {}_place = {}
-                WHERE entry_id = {}"""
+                WHERE person_id = {}"""
 
 #    # Change ' with '' for SQL input compatibility
 #    if name.find('\'') != -1:
@@ -166,7 +166,7 @@ def update_place(entry_id, event_type, place):
         # create a new cursor
         cur = conn.cursor()
         # execute the UPDATE  statement
-        cur.execute(sql.format(event_type, place, entry_id))
+        cur.execute(sql.format(event_type, place, person_id))
         # get the number of updated rows
         updated_rows = cur.rowcount
         # Commit the changes to the database
@@ -204,20 +204,20 @@ def convert_date_dmy_to_ymd(date):
             print('Not a valid date: {}. Date not converted.'.format(date))
     return date
 
-def update_number_of_children(entry_id, number_of_children):
+def update_number_of_children(person_id, number_of_children):
     """
-    Update number of children in an entry
+    Update number of children in a person
 
     Args:
-        (integer) entry_id - Entry ID
+        (integer) person_id - Person ID
         (integer) number_of_children - Number of known children
     Returns:
         (int) updated_rows - How many rows updated
     """
 
-    sql = """ UPDATE entries
+    sql = """ UPDATE persons
                 SET number_of_children = {}
-                WHERE entry_id = {}"""
+                WHERE person_id = {}"""
 
     if len(number_of_children) == 0:
         number_of_children = 'NULL'
@@ -232,7 +232,7 @@ def update_number_of_children(entry_id, number_of_children):
         # create a new cursor
         cur = conn.cursor()
         # execute the UPDATE  statement
-        cur.execute(sql.format(number_of_children, entry_id))
+        cur.execute(sql.format(number_of_children, person_id))
         # get the number of updated rows
         updated_rows = cur.rowcount
         # Commit the changes to the database
@@ -247,20 +247,20 @@ def update_number_of_children(entry_id, number_of_children):
 
     return updated_rows
 
-def update_comments(entry_id, comments):
+def update_comments(person_id, comments):
     """
-    Update a comment value in an entry
+    Update a comment value in a person
 
     Args:
-        (integer) entry_id - Entry ID
-        (string) comments - Comments about the entry
+        (integer) person_id - Person ID
+        (string) comments - Comments about the person
     Returns:
         (int) updated_rows - How many rows updated
     """
 
-    sql = """ UPDATE entries
+    sql = """ UPDATE persons
                 SET comments = {}
-                WHERE entry_id = {}"""
+                WHERE person_id = {}"""
 
     if len(comments) == 0:
         comments = 'NULL'
@@ -281,7 +281,7 @@ def update_comments(entry_id, comments):
         # create a new cursor
         cur = conn.cursor()
         # execute the UPDATE  statement
-        cur.execute(sql.format(comments, entry_id))
+        cur.execute(sql.format(comments, person_id))
         # get the number of updated rows
         updated_rows = cur.rowcount
         # Commit the changes to the database
@@ -297,12 +297,12 @@ def update_comments(entry_id, comments):
     return updated_rows
 
 
-def get_entry(entry_id):
+def get_person(person_id):
     """
-    Get and display an entry from database
+    Get and display a person from database
 
     Args:
-        (integer) entry_id - Entry ID
+        (integer) person_id - Person ID
     """
 
     conn = None
@@ -310,7 +310,7 @@ def get_entry(entry_id):
         params = config()
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
-        cur.execute("SELECT * FROM entries WHERE entry_id = {}".format(entry_id))
+        cur.execute("SELECT * FROM persons WHERE person_id = {}".format(person_id))
         print("The number of parts: ", cur.rowcount)
         row = cur.fetchone()
 
@@ -328,9 +328,9 @@ def get_entry(entry_id):
 def add_person(page_number):
     """ Add a person """
 
-    print('Add a new entry in database:')
+    print('Add a new person in database:')
 
-    # MAKE ENTRY AS AN OBJECT
+    # MAKE A PERSON AS AN OBJECT
     first_names = input('- First names: ')
     last_name = input('- Last name: ')
 
@@ -341,25 +341,25 @@ def add_person(page_number):
     comments = input('- Additional comments: ')
 
     # Checks and adds user to database
-    entry_id = initialize_entry(page_number)
-    update_names(entry_id, first_names, last_name)
+    person_id = initialize_person(page_number)
+    update_names(person_id, first_names, last_name)
 
-    update_date(entry_id, 'birth', convert_date_dmy_to_ymd(birth_date))
-    update_place(entry_id, 'birth', birth_place)
+    update_date(person_id, 'birth', convert_date_dmy_to_ymd(birth_date))
+    update_place(person_id, 'birth', birth_place)
 
-    update_date(entry_id, 'death', convert_date_dmy_to_ymd(death_date))
-    update_place(entry_id, 'death', death_place)
+    update_date(person_id, 'death', convert_date_dmy_to_ymd(death_date))
+    update_place(person_id, 'death', death_place)
 
-    update_comments(entry_id, comments)
+    update_comments(person_id, comments)
 
-    get_entry(entry_id)
+    get_person(person_id)
 
 def main():
     """ Main function """
 
     page_number = None
-    add_more_entries = True
-    while add_more_entries:
+    add_more_persons = True
+    while add_more_persons:
         if not page_number:
             page_number = input('Provide page number: ')
         else:
