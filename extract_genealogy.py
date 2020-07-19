@@ -259,24 +259,24 @@ def update_number_of_children(person_id, number_of_children):
 
     return updated_rows
 
-def update_comments(value_id, type, comments):
+def update_comments(value_id, comment_type, comments):
     """
     Update a comment value in a person
 
     Args:
         (integer) value_id - Person or relationship ID
-        (string) type - 'person' or 'relationship'
+        (string) comment_type - 'person' or 'relationship'
         (string) comments - Comments about the person or relationship
     Returns:
         (int) updated_rows - How many rows updated
     """
 
     sql = None
-    if type == 'person':
+    if comment_type == 'person':
         sql = """ UPDATE persons
                     SET comments = {}
                     WHERE person_id = {}"""
-    elif type == 'relationship':
+    elif comment_type == 'relationship':
         sql = """ UPDATE relationships
                     SET comments = {}
                     WHERE relationship_id = {}"""
@@ -479,6 +479,81 @@ def initialize_relationship(partner1_id, partner2_id):
 
     return relationship_id
 
+def add_child(relationship_id, person_id):
+    """ Add a child """
+
+    relationship_provided = None
+    if relationship_id:
+        relationship_provided = True
+        print('Adding a child to relationship ID: {}'.format(relationship_id))
+    else:
+        relationship_provided = False
+
+    child_provided = None
+    if person_id:
+        child_provided = True
+        print('Adding person ID as a child: {}'.format(person_id))
+    else:
+        child_provided = False
+
+    review_finished = True
+    while review_finished:
+
+        if not relationship_provided:
+            relationship_id = input('- Relationship ID: ')
+
+        if not child_provided:
+            person_id = input('- Child ID: ')
+
+        print('Review input:')
+        print('- Relationship ID: {}'.format(relationship_id))
+        print('- Child ID: {}'.format(person_id))
+
+        ok_to_proceed = input('Everything looks correct (Y/n)?')
+        if ok_to_proceed not in ('n', 'N'):
+            review_finished = False
+
+    initialize_child(relationship_id, person_id)
+
+def initialize_child(relationship_id, person_id):
+    """
+    Inserts a child into database
+
+    Args:
+        (integer) relationship_id - Relationship ID that the child belongs to
+        (integer) person_id - Person ID for the child
+    Returns:
+        (int) child_id - Child ID
+    """
+
+    sql = """INSERT INTO children(relationship_id, person_id) VALUES({}, {})
+          RETURNING child_id;"""
+
+    conn = None
+    child_id = None
+    try:
+        # read database configuration
+        params = config()
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the INSERT statement
+        cur.execute(sql.format(relationship_id, person_id))
+        # get the generated UID back
+        child_id = cur.fetchone()[0]
+        # commit the changes to the database
+        conn.commit()
+        # close communication with the database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return child_id
+
 def main():
     """ Main function """
 
@@ -511,7 +586,16 @@ def main():
         add_relationship(None)
 
     elif add_type in ('c', 'child', 'C', 'Child'):
-        print('Not implemented yet')
+
+        relationship_id = input('Provide a relationship ID: ')
+
+        add_more_persons = True
+        while add_more_persons:
+            add_child(relationship_id, None)
+
+            input_more_children = input('Add more children (Y/n)?')
+            if input_more_children in ('n', 'N'):
+                add_more_persons = False
 
     else:
         print('Unknown entry')
