@@ -373,8 +373,13 @@ def add_person(page_number):
 
     get_person(person_id)
 
-def add_relationship(partner1_id):
+    return person_id
+
+
+def add_relationship(partner1_id, partner2_id):
     """ Add a relationship """
+
+    # Change partner2 optional
 
     partner1_provided = None
     if partner1_id:
@@ -383,7 +388,13 @@ def add_relationship(partner1_id):
     else:
         partner1_provided = False
 
-    partner2_id = None
+    partner2_provided = None
+    if partner2_id:
+        partner2_provided = True
+        print('Adding a relationship for {}'.format(partner2_id))
+    else:
+        partner2_provided = False
+
     relationship_marriage = None
     marriage_date = None
     marriage_place = None
@@ -397,9 +408,13 @@ def add_relationship(partner1_id):
         if not partner1_provided:
             partner1_id = input('- Partner 1 ID: ')
 
-        partner2_id = input('- Partner 2 ID (if known): ')
-        if len(partner2_id) == 0:
-            partner2_id = None
+        if not partner2_provided:
+            partner2_id = input('- Partner 2 ID (if known): ')
+
+            try:
+                partner2_id += 1
+            except TypeError:
+                partner2_id = None
 
         relationship_marriage = input('- Married (Y/n)?: ')
 
@@ -436,6 +451,9 @@ def add_relationship(partner1_id):
         update_place(relationship_id, 'divorce', divorce_place)
 
     update_comments(relationship_id, 'relationship', comments)
+
+    return relationship_id
+
 
 def initialize_relationship(partner1_id, partner2_id):
     """
@@ -554,6 +572,54 @@ def initialize_child(relationship_id, person_id):
 
     return child_id
 
+
+def add_family(person_id_head, page_number):
+    """  Adds a family """
+
+    print('Adding a relationship')
+
+    add_more_spouses = True
+    while add_more_spouses:
+        spouse_known = input('Is the spouse known (y/n)? ').lower()
+        person_id_spouse = None
+        if spouse_known not in ('n', 'no'):
+            page_number_new = input('Provide page number (default {}): '.format(page_number))
+            if len(page_number_new) != 0:
+                page_number = page_number_new
+                # CHECK IF PAGE IS REALLY INT
+
+            person_id_spouse = add_person(page_number)
+
+        relationship_id = add_relationship(person_id_head, person_id_spouse)
+
+        add_more_children = False
+        input_more_children = input('Children from relationship {} (y/n)? '.format(relationship_id)).lower()
+        if input_more_children in ('y', 'yes'):
+            add_more_children = True
+
+        while add_more_children:
+            page_number_new = input('Provide page number (default {}): '.format(page_number))
+            if len(page_number_new) != 0:
+                page_number = page_number_new
+                # CHECK IF PAGE IS REALLY INT
+
+            person_id_child = add_person(page_number)
+
+            add_child(relationship_id, person_id_child)
+
+            input_family = input('Add family for {} (y/N)? '.format(person_id_child)).lower()
+            if input_family in ('y', 'yes'):
+                add_family(person_id_child, page_number)
+
+            input_more_children = input('Add more children to relationship {} (Y/n)? '.format(relationship_id)).lower()
+            if input_more_children in ('n', 'no'):
+                add_more_children = False
+
+        input_more_spouses = input('Add more spouses for {} (y/N)? '.format(person_id_head)).lower()
+        if input_more_spouses not in ('y', 'yes'):
+            add_more_spouses = False
+
+
 def main():
     """ Main function """
 
@@ -561,9 +627,9 @@ def main():
 
     # Ask to add information
 
-    add_type = input('Add (p)person, (r)elationship or (c)hild? ')
+    add_type = input('Add (p)person, (r)elationship or (c)hild? ').lower()
 
-    if add_type in ('p', 'person', 'P', 'Person'):
+    if add_type in ('p', 'person'):
         page_number = None
         add_more_persons = True
         while add_more_persons:
@@ -576,16 +642,20 @@ def main():
                     page_number = page_number_new
                     # CHECK IF PAGE IS REALLY INT
 
-            add_person(page_number)
+            person_id = add_person(page_number)
 
-            input_more_persons = input('Add more persons (Y/n)?')
-            if input_more_persons in ('n', 'N'):
+            input_family = input('Add family for {} (Y/n)? ').lower()
+            if input_family.lower() not in ('n', 'no'):
+                add_family(person_id, page_number)
+
+            input_more_persons = input('Add more persons (Y/n)? ').lower()
+            if input_more_persons in ('n', 'no'):
                 add_more_persons = False
 
-    elif add_type in ('r', 'relationship', 'R', 'Relationship'):
-        add_relationship(None)
+    elif add_type in ('r', 'relationship'):
+        add_relationship(None, None)
 
-    elif add_type in ('c', 'child', 'C', 'Child'):
+    elif add_type in ('c', 'child'):
 
         relationship_id = input('Provide a relationship ID: ')
 
