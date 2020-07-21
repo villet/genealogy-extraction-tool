@@ -350,14 +350,14 @@ def add_person(page_number):
     print('Add a new person in database:')
 
     # MAKE A PERSON AS AN OBJECT
-    first_names = input('- First names: ')
-    last_name = input('- Last name: ')
+    first_names = input('- First names: ').strip()
+    last_name = input('- Last name: ').strip()
 
-    birth_date = input('- Birth date: ') # different date formats
-    birth_place = input('- Birth place: ')
-    death_date = input('- Death date: ')
-    death_place = input('- Death place: ')
-    comments = input('- Additional comments: ')
+    birth_date = input('- Birth date: ').strip() # different date formats
+    birth_place = input('- Birth place: ').strip()
+    death_date = input('- Death date: ').strip()
+    death_place = input('- Death place: ').strip()
+    comments = input('- Additional comments: ').strip()
 
     # Checks and adds user to database
     person_id = initialize_person(page_number)
@@ -406,25 +406,25 @@ def add_relationship(partner1_id, partner2_id):
     while review_finished:
 
         if not partner1_provided:
-            partner1_id = input('- Partner 1 ID: ')
+            partner1_id = input('- Partner 1 ID: ').strip()
 
         if not partner2_provided:
-            partner2_id = input('- Partner 2 ID (if known): ')
+            partner2_id = input('- Partner 2 ID (if known): ').strip()
 
             try:
                 partner2_id += 1
             except TypeError:
                 partner2_id = None
 
-        relationship_marriage = input('- Married (Y/n)?: ')
+        relationship_marriage = input('- Married (Y/n)?: ').strip().lower()
 
-        if relationship_marriage not in ('n', 'N'):
-            marriage_date = input('- Married date: ')
-            marriage_place = input('- Married place: ')
-            divorce_date = input('- Divorce date: ')
-            divorce_place = input('- Divorce place: ')
+        if relationship_marriage not in ('n', 'no'):
+            marriage_date = input('- Married date: ').strip()
+            marriage_place = input('- Married place: ').strip()
+            divorce_date = input('- Divorce date: ').strip()
+            divorce_place = input('- Divorce place: ').strip()
 
-        comments = input('- Comments about relationship: ')
+        comments = input('- Comments about relationship: ').strip()
 
         print('Review input:')
         print('- Partner 1 ID: {}'.format(partner1_id))
@@ -438,8 +438,8 @@ def add_relationship(partner1_id, partner2_id):
 
         print('- Comments about relationship: {}'.format(comments))
 
-        ok_to_proceed = input('Everything looks correct (Y/n)?')
-        if ok_to_proceed not in ('n', 'N'):
+        ok_to_proceed = input('Everything looks correct (Y/n)?').strip().lower()
+        if ok_to_proceed not in ('n', 'no'):
             review_finished = False
 
     relationship_id = initialize_relationship(partner1_id, partner2_id)
@@ -518,17 +518,17 @@ def add_child(relationship_id, person_id):
     while review_finished:
 
         if not relationship_provided:
-            relationship_id = input('- Relationship ID: ')
+            relationship_id = input('- Relationship ID: ').strip()
 
         if not child_provided:
-            person_id = input('- Child ID: ')
+            person_id = input('- Child ID: ').strip()
 
         print('Review input:')
         print('- Relationship ID: {}'.format(relationship_id))
         print('- Child ID: {}'.format(person_id))
 
-        ok_to_proceed = input('Everything looks correct (Y/n)?')
-        if ok_to_proceed not in ('n', 'N'):
+        ok_to_proceed = input('Everything looks correct (Y/n)?').strip().lower()
+        if ok_to_proceed not in ('n', 'no'):
             review_finished = False
 
     initialize_child(relationship_id, person_id)
@@ -634,10 +634,10 @@ def main():
         add_more_persons = True
         while add_more_persons:
             if not page_number:
-                page_number = input('Provide page number: ')
+                page_number = input('Provide page number: ').strip()
                 # CHECK IF PAGE IS REALLY INT
             else:
-                page_number_new = input('Provide page number (default {}): '.format(page_number))
+                page_number_new = input('Provide page number (default {}): '.format(page_number)).strip()
                 if len(page_number_new) != 0:
                     page_number = page_number_new
                     # CHECK IF PAGE IS REALLY INT
@@ -657,14 +657,14 @@ def main():
 
     elif add_type in ('c', 'child'):
 
-        relationship_id = input('Provide a relationship ID: ')
+        relationship_id = input('Provide a relationship ID: ').strip()
 
         add_more_persons = True
         while add_more_persons:
             add_child(relationship_id, None)
 
-            input_more_children = input('Add more children (Y/n)?')
-            if input_more_children in ('n', 'N'):
+            input_more_children = input('Add more children (Y/n)?').lower()
+            if input_more_children in ('n', 'no'):
                 add_more_persons = False
 
     else:
