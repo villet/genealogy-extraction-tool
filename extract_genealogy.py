@@ -330,12 +330,8 @@ def get_person(person_id):
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
         cur.execute("SELECT * FROM persons WHERE person_id = {}".format(person_id))
-        print("The number of parts: ", cur.rowcount)
+        # print("The number of parts: ", cur.rowcount)
         row = cur.fetchone()
-
-        while row is not None:
-            print(row)
-            row = cur.fetchone()
 
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -343,6 +339,63 @@ def get_person(person_id):
     finally:
         if conn is not None:
             conn.close()
+
+    return row
+
+def get_relationship(relationship_id):
+    """
+    Get and display a relationship from database
+
+    Args:
+        (integer) relationship_id - Relationship ID
+    """
+
+    conn = None
+    try:
+        params = config()
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM relationships WHERE relationship_id = {}".format(
+            relationship_id))
+        #print("The number of parts: ", cur.rowcount)
+        row = cur.fetchone()
+
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return row
+
+def get_child(child_id):
+    """
+    Get and display a child from database
+
+    Args:
+        (integer) child_id - Child ID
+    """
+
+    conn = None
+    try:
+        params = config()
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM children WHERE person_id = {}".format(
+            child_id))
+        #print("The number of parts: ", cur.rowcount)
+        row = cur.fetchone()
+
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return row
+
 
 def add_person(page_number):
     """ Add a person """
@@ -371,29 +424,17 @@ def add_person(page_number):
 
     update_comments(person_id, 'person', comments)
 
-    get_person(person_id)
+    # Print saved data
+    saved_data = get_person(person_id)
+    print(saved_data)
 
     return person_id
 
 
-def add_relationship(partner1_id, partner2_id):
+def add_relationship(partner1_id, partner2_id=None):
     """ Add a relationship """
 
-    # Change partner2 optional
-
-    partner1_provided = None
-    if partner1_id:
-        partner1_provided = True
-        print('Adding a relationship for {}'.format(partner1_id))
-    else:
-        partner1_provided = False
-
-    partner2_provided = None
-    if partner2_id:
-        partner2_provided = True
-        print('Adding a relationship for {}'.format(partner2_id))
-    else:
-        partner2_provided = False
+    print('Adding a relationship')
 
     relationship_marriage = None
     marriage_date = None
@@ -404,17 +445,6 @@ def add_relationship(partner1_id, partner2_id):
 
     review_finished = True
     while review_finished:
-
-        if not partner1_provided:
-            partner1_id = input('- Partner 1 ID: ').strip()
-
-        if not partner2_provided:
-            partner2_id = input('- Partner 2 ID (if known): ').strip()
-
-            try:
-                partner2_id += 1
-            except TypeError:
-                partner2_id = None
 
         relationship_marriage = input('- Married (Y/n)?: ').strip().lower()
 
@@ -429,7 +459,6 @@ def add_relationship(partner1_id, partner2_id):
         print('Review input:')
         print('- Partner 1 ID: {}'.format(partner1_id))
         print('- Partner 2 ID: {}'.format(partner2_id))
-        # print('- Married: {}'. format(relationship_marriage))
         if relationship_marriage not in ('n', 'N'):
             print('- Marriage date: {}'.format(marriage_date))
             print('- Marriage place: {}'.format(marriage_place))
@@ -451,6 +480,10 @@ def add_relationship(partner1_id, partner2_id):
         update_place(relationship_id, 'divorce', divorce_place)
 
     update_comments(relationship_id, 'relationship', comments)
+
+    # Print saved data
+    saved_data = get_relationship(relationship_id)
+    print(saved_data)
 
     return relationship_id
 
@@ -533,6 +566,10 @@ def add_child(relationship_id, person_id):
 
     initialize_child(relationship_id, person_id)
 
+    # Print saved data
+    saved_data = get_child(person_id)
+    print(saved_data)
+
 def initialize_child(relationship_id, person_id):
     """
     Inserts a child into database
@@ -576,49 +613,153 @@ def initialize_child(relationship_id, person_id):
 def add_family(person_id_head, page_number):
     """  Adds a family """
 
-    print('Adding a relationship')
+    print('Adding a family')
 
     add_more_spouses = True
     while add_more_spouses:
-        spouse_known = input('Is the spouse known (y/n)? ').lower()
+        spouse_known = input('Is the spouse known (Y/n)? ').lower()
         person_id_spouse = None
         if spouse_known not in ('n', 'no'):
-            page_number_new = input('Provide page number (default {}): '.format(page_number))
+            page_number_new = input_integer('Provide page number (default {}): '.format(
+                page_number))
             if len(page_number_new) != 0:
                 page_number = page_number_new
-                # CHECK IF PAGE IS REALLY INT
 
             person_id_spouse = add_person(page_number)
 
         relationship_id = add_relationship(person_id_head, person_id_spouse)
 
         add_more_children = False
-        input_more_children = input('Children from relationship {} (y/n)? '.format(relationship_id)).lower()
+        input_more_children = input('Add children to relationship {} (y/N)? '.format(
+            print_relationship(relationship_id))).lower()
         if input_more_children in ('y', 'yes'):
             add_more_children = True
 
         while add_more_children:
-            page_number_new = input('Provide page number (default {}): '.format(page_number))
+            page_number_new = input_integer('Provide page number (default {}): '.format(
+                page_number))
             if len(page_number_new) != 0:
                 page_number = page_number_new
-                # CHECK IF PAGE IS REALLY INT
 
             person_id_child = add_person(page_number)
 
             add_child(relationship_id, person_id_child)
 
-            input_family = input('Add family for {} (y/N)? '.format(person_id_child)).lower()
+            input_family = input('Add family for {} (y/N)? '.format(
+                print_person(person_id_child))).lower()
             if input_family in ('y', 'yes'):
                 add_family(person_id_child, page_number)
 
-            input_more_children = input('Add more children to relationship {} (Y/n)? '.format(relationship_id)).lower()
+            input_more_children = input('Add more children to relationship {} (Y/n)? '.format(
+                print_relationship(relationship_id))).lower()
             if input_more_children in ('n', 'no'):
                 add_more_children = False
 
-        input_more_spouses = input('Add more spouses for {} (y/N)? '.format(person_id_head)).lower()
+        input_more_spouses = input('Add more spouses for {} (y/N)? '.format(
+            print_person(person_id_head))).lower()
         if input_more_spouses not in ('y', 'yes'):
             add_more_spouses = False
 
+def input_integer(input_message, allow_empty=True, allow_zero=False):
+    """ Input integer """
+
+    valid_input = False
+    while not valid_input:
+        read_input = input(input_message).strip()
+
+        if len(read_input) != 0:
+            try:
+                read_input = int(read_input)
+            except ValueError:
+                print('ERROR: Please, provide an integer value.')
+            else:
+                if read_input > 0:
+                    valid_input = True
+                elif allow_zero and read_input == 0:
+                    valid_input = True
+                else:
+                    print('ERROR: Please, provide value larger than zero.')
+        else:
+            if allow_empty:
+                valid_input = True
+            else:
+                print('ERROR: Please, provide a non-empty value.')
+
+    return read_input
+
+def print_person(person_id):
+    """ Print person """
+
+    person_data = get_person(person_id)
+
+    first_names = person_data[2]
+    last_name = person_data[3]
+    birth_date = person_data[4]
+    death_date = person_data[6]
+
+    if not first_names:
+        first_names = '[No first names]'
+    if not last_name:
+        last_name = '[No last name]'
+    if not birth_date:
+        birth_date = '[No birth date]'
+    if not death_date:
+        death_date = '[No death date]'
+
+    printed_data = '{} {} ({} - {})'.format(first_names, last_name, birth_date, death_date)
+
+    return printed_data
+
+def print_relationship(relationship_id):
+    """ Print relationship """
+
+    # Read relationship data
+    relationship_data = get_relationship(relationship_id)
+
+    person_id_partner1 = relationship_data[1]
+    person_id_partner2 = relationship_data[2]
+    marriage_date = relationship_data[3]
+    divorce_date = relationship_data[5]
+
+    # Read partner data
+    partner1_data = get_person(person_id_partner1)
+
+    partner2_data = None
+    if person_id_partner2:
+        partner2_data = get_person(person_id_partner2)
+
+    p1_first_names = partner1_data[2]
+    p1_last_name = partner1_data[3]
+
+    if person_id_partner2:
+        p2_first_names = partner2_data[2]
+        p2_last_name = partner2_data[3]
+
+    if not p1_first_names:
+        p1_first_names = '[No first names]'
+    if not p1_last_name:
+        p1_last_name = '[No last name]'
+
+    if person_id_partner2:
+        if not p2_first_names:
+            p2_first_names = '[No first names]'
+        if not p2_last_name:
+            p2_last_name = '[No last name]'
+
+    if not marriage_date:
+        marriage_date = '[No marriage date]'
+    if not divorce_date:
+        divorce_date = '[No divorce date]'
+
+    printed_data = None
+    if person_id_partner2:
+        printed_data = '{} {} and {} {} (m. {} - {})'.format(
+            p1_first_names, p1_last_name, p2_first_names, p2_last_name, marriage_date, divorce_date)
+    else:
+        printed_data = '{} {} and unknown partner (m. {} - {})'.format(
+            p1_first_names, p1_last_name, marriage_date, divorce_date)
+
+    return printed_data
 
 def main():
     """ Main function """
@@ -634,17 +775,17 @@ def main():
         add_more_persons = True
         while add_more_persons:
             if not page_number:
-                page_number = input('Provide page number: ').strip()
-                # CHECK IF PAGE IS REALLY INT
+                page_number = input_integer('Provide page number: ', False)
             else:
-                page_number_new = input('Provide page number (default {}): '.format(page_number)).strip()
+                page_number_new = input_integer('Provide page number (default {}): '.format(
+                    page_number))
                 if len(page_number_new) != 0:
                     page_number = page_number_new
-                    # CHECK IF PAGE IS REALLY INT
 
             person_id = add_person(page_number)
 
-            input_family = input('Add family for {} (Y/n)? ').lower()
+            input_family = input('Add family for {} (Y/n)? '.format(
+                print_person(person_id))).lower()
             if input_family.lower() not in ('n', 'no'):
                 add_family(person_id, page_number)
 
@@ -653,7 +794,20 @@ def main():
                 add_more_persons = False
 
     elif add_type in ('r', 'relationship'):
-        add_relationship(None, None)
+        add_more_relationships = True
+        while add_more_relationships:
+            person_id_head = input_integer('Provide ID for partner 1: ')
+
+            spouse_known = input('Is the spouse known (Y/n)? ').lower()
+            person_id_spouse = None
+            if spouse_known not in ('n', 'no'):
+                person_id_spouse = input_integer('Provide ID for partner 2: ')
+
+            add_relationship(person_id_head, person_id_spouse)
+
+            input_more_relationships = input('Add more relationships (Y/n)? ').lower()
+            if input_more_relationships in ('n', 'no'):
+                add_more_relationships = False
 
     elif add_type in ('c', 'child'):
 
