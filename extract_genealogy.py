@@ -316,6 +316,78 @@ def update_comments(value_id, comment_type, comments):
     return updated_rows
 
 
+def update_boolean(value_name, value_id, boolean_name, boolean_value, table_name):
+    """
+    Update a boolean value in database
+    """
+
+    sql = """ UPDATE {} SET {} = {} WHERE {} = {}"""
+
+    conn = None
+    updated_rows = 0
+    try:
+        # read database configuration
+        params = config()
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the UPDATE  statement
+        cur.execute(sql.format(table_name, boolean_name, boolean_value, value_name, value_id))
+        # get the number of updated rows
+        updated_rows = cur.rowcount
+        # Commit the changes to the database
+        conn.commit()
+        # Close communication with the PostgreSQL database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return updated_rows
+
+
+def update_gender(person_id, gender_name):
+    """
+    Update a boolean value in database
+    """
+
+    sql = """ UPDATE persons SET gender = {} WHERE person_id = {}"""
+
+    if len(gender_name) == 0:
+        gender_name = 'NULL'
+    else:
+        gender_name = "'" + gender_name + "'" # added string need to be within '-characters
+
+
+    conn = None
+    updated_rows = 0
+    try:
+        # read database configuration
+        params = config()
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the UPDATE  statement
+        cur.execute(sql.format(gender_name, person_id))
+        # get the number of updated rows
+        updated_rows = cur.rowcount
+        # Commit the changes to the database
+        conn.commit()
+        # Close communication with the PostgreSQL database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return updated_rows
+
+
 def get_person(person_id):
     """
     Get and display a person from database
@@ -405,11 +477,30 @@ def add_person(page_number):
     # MAKE A PERSON AS AN OBJECT
     first_names = input('- First names: ').strip()
     last_name = input('- Last name: ').strip()
+    gender = input('- Gender: ').strip().lower()
+
+    if gender in ('m', 'male'):
+        gender = 'MALE'
+    elif gender in ('f', 'female'):
+        gender = 'FEMALE'
 
     birth_date = input('- Birth date: ').strip() # different date formats
     birth_place = input('- Birth place: ').strip()
     death_date = input('- Death date: ').strip()
     death_place = input('- Death place: ').strip()
+
+    valid_answer = False
+    while not valid_answer:
+        deceased = input('- Person deceased (y/n): ').strip().lower()
+        if deceased in ('y', 'yes'):
+            deceased = 'TRUE'
+            valid_answer = True
+        elif deceased in ('n', 'no'):
+            deceased = 'FALSE'
+            valid_answer = True
+        else:
+            print('ERROR: Please, answer (y/n).')
+
     comments = input('- Additional comments: ').strip()
 
     # Checks and adds user to database
@@ -423,6 +514,9 @@ def add_person(page_number):
     update_place(person_id, 'death', death_place)
 
     update_comments(person_id, 'person', comments)
+
+    update_gender(person_id, gender)
+    update_boolean('person_id', person_id, 'deceased', deceased, 'persons')
 
     # Print saved data
     saved_data = get_person(person_id)
