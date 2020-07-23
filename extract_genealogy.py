@@ -641,26 +641,35 @@ def initialize_relationship(partner1_id, partner2_id):
 
     return relationship_id
 
-def add_child(relationship_id, person_id):
+def add_child(relationship_id, person_id, verbose=False):
     """ Add a child """
 
     relationship_provided = None
     if relationship_id:
         relationship_provided = True
-        print('Adding a child to relationship ID: {}'.format(relationship_id))
+        if verbose:
+            # Change ID to name
+            print('Adding a child to relationship ID: {}'.format(relationship_id))
     else:
         relationship_provided = False
 
     child_provided = None
     if person_id:
         child_provided = True
-        print('Adding person ID as a child: {}'.format(person_id))
+        if verbose:
+            # Change ID to name
+            print('Adding person ID as a child: {}'.format(person_id))
     else:
         child_provided = False
 
-    review_finished = True
-    while review_finished:
+    review_finished = False
 
+    # No review needed if information already provided
+    if relationship_provided and child_provided:
+        review_finished = True
+
+    # Read and review input
+    while not review_finished:
         if not relationship_provided:
             relationship_id = input('- Relationship ID: ').strip()
 
@@ -673,13 +682,15 @@ def add_child(relationship_id, person_id):
 
         ok_to_proceed = input('Everything looks correct (Y/n)?').strip().lower()
         if ok_to_proceed not in ('n', 'no'):
-            review_finished = False
+            review_finished = True
 
     initialize_child(relationship_id, person_id)
 
     # Print saved data
     saved_data = get_child(person_id)
     print(saved_data)
+    print('Child added')
+
 
 def initialize_child(relationship_id, person_id):
     """
@@ -754,7 +765,7 @@ def add_family(person_id_head, page_number):
 
             person_id_child = add_person(page_number)
 
-            add_child(relationship_id, person_id_child)
+            add_child(relationship_id, person_id_child, False)
 
             input_family = input('Add family for {} (y/N)? '.format(
                 print_person(person_id_child))).lower()
