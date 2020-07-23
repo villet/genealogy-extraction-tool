@@ -489,15 +489,32 @@ def add_person(page_number):
     death_date = input('- Death date: ').strip()
     death_place = input('- Death place: ').strip()
 
-    valid_answer = False
-    while not valid_answer:
+    birth_date = convert_date_dmy_to_ymd(birth_date)
+    death_date = convert_date_dmy_to_ymd(death_date)
+
+    # Process deceased
+    deceased = None
+
+    # - If person died or born over 101 years ago, we can assume deceased
+    if len(death_date) != 0:
+        deceased = True
+
+    if birth_date != 0:
+        try:
+            birth_year = int(birth_date[0:4])
+        except ValueError:
+            pass
+        else:
+            if birth_year <= 1919:
+                deceased = True
+
+    # - Otherwise ask it from user
+    while deceased is None:
         deceased = input('- Person deceased (y/n): ').strip().lower()
         if deceased in ('y', 'yes'):
-            deceased = 'TRUE'
-            valid_answer = True
+            deceased = True
         elif deceased in ('n', 'no'):
-            deceased = 'FALSE'
-            valid_answer = True
+            deceased = False
         else:
             print('ERROR: Please, answer (y/n).')
 
@@ -507,10 +524,10 @@ def add_person(page_number):
     person_id = initialize_person(page_number)
     update_names(person_id, first_names, last_name)
 
-    update_date(person_id, 'birth', convert_date_dmy_to_ymd(birth_date))
+    update_date(person_id, 'birth', birth_date)
     update_place(person_id, 'birth', birth_place)
 
-    update_date(person_id, 'death', convert_date_dmy_to_ymd(death_date))
+    update_date(person_id, 'death', death_date)
     update_place(person_id, 'death', death_place)
 
     update_comments(person_id, 'person', comments)
