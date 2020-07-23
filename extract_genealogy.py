@@ -557,7 +557,7 @@ def add_relationship(partner1_id, partner2_id=None):
     review_finished = True
     while review_finished:
 
-        relationship_marriage = input('- Married (Y/n)?: ').strip().lower()
+        relationship_marriage = input('- Add marriage information (Y/n)?: ').strip().lower()
 
         if relationship_marriage not in ('n', 'no'):
             marriage_date = input('- Married date: ').strip()
