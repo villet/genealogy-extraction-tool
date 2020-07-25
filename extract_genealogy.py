@@ -966,18 +966,15 @@ def print_relationship(relationship_id):
         print_data = '{} {} and unknown partner (m. {} - {})'.format(
             p1_first_names, p1_last_name, marriage_date, divorce_date)
 
-    return printed_data
+    return print_data
 
 
 def main():
     """ Main function """
 
-    # Ask to add or modify
-
-    # Ask to add information
-
     add_type = input('Add (p)person, (r)elationship or (c)hild? ').lower()
 
+    # Add a person or a whole family line
     if add_type in ('p', 'person'):
         page_number = None
         add_more_persons = True
@@ -1001,6 +998,7 @@ def main():
             if input_more_persons in ('n', 'no'):
                 add_more_persons = False
 
+    # Add manually a relationship by IDs
     elif add_type in ('r', 'relationship'):
         add_more_relationships = True
         while add_more_relationships:
@@ -1017,6 +1015,7 @@ def main():
             if input_more_relationships in ('n', 'no'):
                 add_more_relationships = False
 
+    # Add manually a child by IDs
     elif add_type in ('c', 'child'):
 
         relationship_id = input('Provide a relationship ID: ').strip()
