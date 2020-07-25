@@ -39,6 +39,7 @@ def initialize_person(page_number):
 
     return person_id
 
+
 def update_names(person_id, first_names, last_name):
     """
     Update person's first and last names
@@ -84,6 +85,7 @@ def update_names(person_id, first_names, last_name):
             conn.close()
 
     return updated_rows
+
 
 def update_date(value_id, event_type, date):
     """
@@ -137,12 +139,13 @@ def update_date(value_id, event_type, date):
 
     return updated_rows
 
+
 def update_place(value_id, event_type, place):
     """
     Update a place value in a person or relationship
 
     Args:
-        (integer) id - Person or relationship ID
+        (integer) value_id - Person or relationship ID
         (string) event_type - Type of event matching with a column (birth etc.)
         (string) place - Name of place
     Returns:
@@ -193,6 +196,7 @@ def update_place(value_id, event_type, place):
 
     return updated_rows
 
+
 def convert_date_dmy_to_ymd(date):
     """
     Conver DD.MM.YYYY (German) date format to YYYY-MM-DD (ISO) date format
@@ -215,6 +219,7 @@ def convert_date_dmy_to_ymd(date):
         else:
             print('Not a valid date: {}. Date not converted.'.format(date))
     return date
+
 
 def update_number_of_children(person_id, number_of_children):
     """
@@ -258,6 +263,7 @@ def update_number_of_children(person_id, number_of_children):
             conn.close()
 
     return updated_rows
+
 
 def update_comments(value_id, comment_type, comments):
     """
@@ -318,7 +324,16 @@ def update_comments(value_id, comment_type, comments):
 
 def update_boolean(value_name, value_id, boolean_name, boolean_value, table_name):
     """
-    Update a boolean value in database
+    Generic function to update a boolean value in database
+
+    Args:
+        (string) value_name - Name of ID
+        (integer) value_id - ID value
+        (string) boolean_name - Name of boolean value
+        (string) boolean_valye - 'TRUE' or 'FALSE'
+        (string) table_name - table name in database
+    Returns:
+        (int) updated_rows - How many rows updated
     """
 
     sql = """ UPDATE {} SET {} = {} WHERE {} = {}"""
@@ -351,7 +366,13 @@ def update_boolean(value_name, value_id, boolean_name, boolean_value, table_name
 
 def update_gender(person_id, gender_name):
     """
-    Update a boolean value in database
+    Update person's gender
+
+    Args:
+        (integer) person_id - Person's ID
+        (string) gender_name - Name of gender (usually 'MALE' or 'FEMALE')
+    Returns:
+        (int) updated_rows - How many rows updated
     """
 
     sql = """ UPDATE persons SET gender = {} WHERE person_id = {}"""
@@ -390,10 +411,12 @@ def update_gender(person_id, gender_name):
 
 def get_person(person_id):
     """
-    Get and display a person from database
+    Get personal data saved in database
 
     Args:
         (integer) person_id - Person ID
+    Returns:
+        (tuple) person_data - Personal data
     """
 
     conn = None
@@ -402,8 +425,7 @@ def get_person(person_id):
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
         cur.execute("SELECT * FROM persons WHERE person_id = {}".format(person_id))
-        # print("The number of parts: ", cur.rowcount)
-        row = cur.fetchone()
+        person_data = cur.fetchone()
 
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -412,14 +434,17 @@ def get_person(person_id):
         if conn is not None:
             conn.close()
 
-    return row
+    return person_data
+
 
 def get_relationship(relationship_id):
     """
-    Get and display a relationship from database
+    Get relationship data saved in database
 
     Args:
         (integer) relationship_id - Relationship ID
+    Returns:
+        (tuple) relationship_data - Relationship data
     """
 
     conn = None
@@ -429,8 +454,7 @@ def get_relationship(relationship_id):
         cur = conn.cursor()
         cur.execute("SELECT * FROM relationships WHERE relationship_id = {}".format(
             relationship_id))
-        #print("The number of parts: ", cur.rowcount)
-        row = cur.fetchone()
+        relationship_data = cur.fetchone()
 
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -439,14 +463,17 @@ def get_relationship(relationship_id):
         if conn is not None:
             conn.close()
 
-    return row
+    return relationship_data
+
 
 def get_child(child_id):
     """
-    Get and display a child from database
+    Get child data saved in database
 
     Args:
         (integer) child_id - Child ID
+    Returns:
+        (tuple) child_data - Child data
     """
 
     conn = None
@@ -456,8 +483,7 @@ def get_child(child_id):
         cur = conn.cursor()
         cur.execute("SELECT * FROM children WHERE person_id = {}".format(
             child_id))
-        #print("The number of parts: ", cur.rowcount)
-        row = cur.fetchone()
+        child_data = cur.fetchone()
 
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -466,11 +492,18 @@ def get_child(child_id):
         if conn is not None:
             conn.close()
 
-    return row
+    return child_data
 
 
 def add_person(page_number):
-    """ Add a person """
+    """
+    Inputs person data and adds person to database
+
+    Args:
+        (integer) page number - Page number
+    Returns:
+        (integer) person_id - Saved Person ID
+    """
 
     print('Add a new person in database:')
 
@@ -543,7 +576,15 @@ def add_person(page_number):
 
 
 def add_relationship(partner1_id, partner2_id=None):
-    """ Add a relationship """
+    """
+    Inputs relationship data and adds a relationshiup to database
+
+    Args:
+        (integer) partner1_id - Partner 1 ID
+        (integer) partner2_id - Partner 2 ID (optional, 'None' if not known)
+    Returns:
+        (integer) relationship_id - Saved Relationship ID
+    """
 
     print('Adding a relationship')
 
@@ -607,7 +648,7 @@ def initialize_relationship(partner1_id, partner2_id):
         (integer) partner1_id - Person ID for partner 1
         (integer) partner2_id - Person ID for partner 2 ('None' if not known)
     Returns:
-        (int) relationship_id - Relationship ID
+        (int) relationship_id - Saved Relationship ID
     """
 
     sql = """INSERT INTO relationships(person_id_partner1, person_id_partner2) VALUES({}, {})
@@ -641,8 +682,18 @@ def initialize_relationship(partner1_id, partner2_id):
 
     return relationship_id
 
+
 def add_child(relationship_id, person_id, verbose=False):
-    """ Add a child """
+    """
+    Inputs child data and adds a child to database
+
+    Args:
+        (integer) relationship_id - Relationship ID in which the child is added
+        (integer) person_id - Person ID of the person who is added as a child
+        (boolean) verbose - Enable/disable a verbose mode (disabled by default)
+    Returns:
+        (integer) child_id - Saved Child ID
+    """
 
     relationship_provided = None
     if relationship_id:
@@ -684,12 +735,14 @@ def add_child(relationship_id, person_id, verbose=False):
         if ok_to_proceed not in ('n', 'no'):
             review_finished = True
 
-    initialize_child(relationship_id, person_id)
+    child_id = initialize_child(relationship_id, person_id)
 
     # Print saved data
     saved_data = get_child(person_id)
     print(saved_data)
     print('Child added')
+
+    return child_id
 
 
 def initialize_child(relationship_id, person_id):
@@ -700,7 +753,7 @@ def initialize_child(relationship_id, person_id):
         (integer) relationship_id - Relationship ID that the child belongs to
         (integer) person_id - Person ID for the child
     Returns:
-        (int) child_id - Child ID
+        (int) child_id - Saved Child ID
     """
 
     sql = """INSERT INTO children(relationship_id, person_id) VALUES({}, {})
@@ -733,7 +786,13 @@ def initialize_child(relationship_id, person_id):
 
 
 def add_family(person_id_head, page_number):
-    """  Adds a family """
+    """
+    Adds a family line recursively
+
+    Args:
+        (integer) person_id_head - Person ID of head person in family line
+        (integer) page_number - Page number
+    """
 
     print('Adding a family')
 
@@ -782,8 +841,18 @@ def add_family(person_id_head, page_number):
         if input_more_spouses not in ('y', 'yes'):
             add_more_spouses = False
 
+
 def input_integer(input_message, allow_empty=True, allow_zero=False):
-    """ Input integer """
+    """
+    Inputs a valid integer input
+
+    Args:
+        (string) input_message - A message printed before input
+        (integer) allow_empty - Allow empty input (enabled by default)
+        (integer) allow_zero - Allow zero as input (disabled by default)
+    Returns:
+        (string/integer) read_input - Input read
+    """
 
     valid_input = False
     while not valid_input:
@@ -809,8 +878,16 @@ def input_integer(input_message, allow_empty=True, allow_zero=False):
 
     return read_input
 
+
 def print_person(person_id):
-    """ Print person """
+    """
+    Prepares a person data print
+
+    Args:
+        (integer) person_id - Person ID
+    Returns:
+        (string) print_data - Prepared print data
+    """
 
     person_data = get_person(person_id)
 
@@ -828,12 +905,20 @@ def print_person(person_id):
     if not death_date:
         death_date = '[No death date]'
 
-    printed_data = '{} {} ({} - {})'.format(first_names, last_name, birth_date, death_date)
+    print_data = '{} {} ({} - {})'.format(first_names, last_name, birth_date, death_date)
 
-    return printed_data
+    return print_data
+
 
 def print_relationship(relationship_id):
-    """ Print relationship """
+    """
+    Prepares a relationship data print
+
+    Args:
+        (integer) relationship_id - Relationship ID
+    Returns:
+        (string) print_data - Prepared print data
+    """
 
     # Read relationship data
     relationship_data = get_relationship(relationship_id)
@@ -873,15 +958,16 @@ def print_relationship(relationship_id):
     if not divorce_date:
         divorce_date = '[No divorce date]'
 
-    printed_data = None
+    print_data = None
     if person_id_partner2:
-        printed_data = '{} {} and {} {} (m. {} - {})'.format(
+        print_data = '{} {} and {} {} (m. {} - {})'.format(
             p1_first_names, p1_last_name, p2_first_names, p2_last_name, marriage_date, divorce_date)
     else:
-        printed_data = '{} {} and unknown partner (m. {} - {})'.format(
+        print_data = '{} {} and unknown partner (m. {} - {})'.format(
             p1_first_names, p1_last_name, marriage_date, divorce_date)
 
     return printed_data
+
 
 def main():
     """ Main function """
