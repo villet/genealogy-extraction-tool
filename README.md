@@ -33,10 +33,46 @@ This tool was built to speed-up the extraction of genealogical data from a famil
 
 The program requires Python version 3 and a PostgresSQL database installed.
 
-### Files used
-extract_genealogy.py – Data extraction tool
+#### PostgreSQL Database Structure
 
-xxx.py — Data review tool
+The tool uses the following structure for database:
+
+<pre><code>
+CREATE TABLE persons(
+	person_id serial PRIMARY KEY,
+	page_number integer NOT NULL,
+	first_names VARCHAR (100),
+	last_name VARCHAR (100),
+	gender VARCHAR(30),
+	birth_date VARCHAR (10),
+	birth_place VARCHAR (255),
+	death_date VARCHAR (10),
+	death_place VARCHAR (255),
+	comments VARCHAR (255));
+
+CREATE TABLE relationships(
+  relationship_id serial PRIMARY KEY,
+	person_id_partner1 INTEGER NOT NULL,
+	person_id_partner2 INTEGER,
+	marriage_date VARCHAR (10),
+	marriage_place VARCHAR (255),
+	divorce_date VARCHAR (10),
+	divorce_place VARCHAR (255),
+	comments VARCHAR (255));
+
+CREATE TABLE children(
+	child_id serial PRIMARY KEY,
+	person_id INTEGER NOT NULL,
+	relationship_id INTEGER NOT NULL);
+</pre></code>
+
+### Files used
+
+- *extract_genealogy.py* – Data extraction tool
+- *database.ini-temp* – PostgreSQL database configuration (rename to database.ini)
+- *config.py* – PostgreSQL configuration functions
+- *README.md* – This README file
+
 
 ### Additional Sources
 
