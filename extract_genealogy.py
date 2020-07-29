@@ -911,12 +911,16 @@ def print_person(person_id):
         first_names = '[No first names]'
     if not last_name:
         last_name = '[No last name]'
-    if not birth_date:
-        birth_date = '[No birth date]'
-    if not death_date:
-        death_date = '[No death date]'
 
-    print_data = '{} {} ({} - {})'.format(first_names, last_name, birth_date, death_date)
+    print_data = None
+    if birth_date and death_date:
+        print_data = '{} {} (b. {} d. {})'.format(first_names, last_name, birth_date, death_date)
+    elif birth_date and not death_date:
+        print_data = '{} {} (b. {})'.format(first_names, last_name, birth_date)
+    elif not birth_date and death_date:
+        print_data = '{} {} (d. {})'.format(first_names, last_name, death_date)
+    else:
+        print_data = '{} {}'.format(first_names, last_name)
 
     return print_data
 
