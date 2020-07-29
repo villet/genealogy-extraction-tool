@@ -595,8 +595,8 @@ def add_relationship(partner1_id, partner2_id=None):
     divorce_place = None
     comments = None
 
-    review_finished = True
-    while review_finished:
+    review_finished = False
+    while not review_finished:
 
         relationship_marriage = input('- Add marriage information (Y/n)?: ').strip().lower()
 
@@ -608,9 +608,12 @@ def add_relationship(partner1_id, partner2_id=None):
 
         comments = input('- Comments about relationship: ').strip()
 
-        print('Review input:')
-        print('- Partner 1 ID: {}'.format(partner1_id))
-        print('- Partner 2 ID: {}'.format(partner2_id))
+        print('Review input for relationship:')
+        print('- Partner 1: {}'.format(print_person(partner1_id)))
+        if partner2_id is not None:
+            print('- Partner 2: {}'.format(print_person(partner2_id)))
+        else:
+            print('- Partner 2: Not known')
         if relationship_marriage not in ('n', 'N'):
             print('- Marriage date: {}'.format(marriage_date))
             print('- Marriage place: {}'.format(marriage_place))
@@ -619,9 +622,17 @@ def add_relationship(partner1_id, partner2_id=None):
 
         print('- Comments about relationship: {}'.format(comments))
 
-        ok_to_proceed = input('Everything looks correct (Y/n)?').strip().lower()
-        if ok_to_proceed not in ('n', 'no'):
-            review_finished = False
+        valid_input = False
+        while not valid_input:
+            validation_input = input('Everything looks correct (y/n)? ').strip().lower()
+            if validation_input in ('y', 'yes'):
+                review_finished = True
+                valid_input = True
+            elif validation_input in ('n', 'no'):
+                print('Asking marriage information again.')
+                valid_input = True
+            else:
+                print('Please type y(es) or n(o).')
 
     relationship_id = initialize_relationship(partner1_id, partner2_id)
 
