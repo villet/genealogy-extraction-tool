@@ -507,51 +507,85 @@ def add_person(page_number):
 
     print('Add a new person in database:')
 
-    # MAKE A PERSON AS AN OBJECT
-    first_names = input('- First names: ').strip()
-    last_name = input('- Last name: ').strip()
-    gender = input('- Gender: ').strip().lower()
-
-    if gender in ('m', 'male'):
-        gender = 'MALE'
-    elif gender in ('f', 'female'):
-        gender = 'FEMALE'
-
-    birth_date = input('- Birth date: ').strip() # different date formats
-    birth_place = input('- Birth place: ').strip()
-    death_date = input('- Death date: ').strip()
-    death_place = input('- Death place: ').strip()
-
-    birth_date = convert_date_dmy_to_ymd(birth_date)
-    death_date = convert_date_dmy_to_ymd(death_date)
-
-    # Process deceased
+    first_names = None
+    last_name = None
+    gender = None
+    birth_date = None
+    birth_place = None
+    death_date = None
+    death_place = None
     deceased = None
+    comments = None
 
-    # - If person died or born over 101 years ago, we can assume deceased
-    if len(death_date) != 0:
-        deceased = True
 
-    if birth_date != 0:
-        try:
-            birth_year = int(birth_date[0:4])
-        except ValueError:
-            pass
-        else:
-            if birth_year <= 1919:
-                deceased = True
+    review_finished = False
+    while not review_finished:
 
-    # - Otherwise ask it from user
-    while deceased is None:
-        deceased = input('- Person deceased (y/n): ').strip().lower()
-        if deceased in ('y', 'yes'):
+        first_names = input('- First names: ').strip()
+        last_name = input('- Last name: ').strip()
+        gender = input('- Gender: ').strip().lower()
+
+        if gender in ('m', 'male'):
+            gender = 'MALE'
+        elif gender in ('f', 'female'):
+            gender = 'FEMALE'
+
+        birth_date = input('- Birth date: ').strip() # different date formats
+        birth_place = input('- Birth place: ').strip()
+        death_date = input('- Death date: ').strip()
+        death_place = input('- Death place: ').strip()
+
+        birth_date = convert_date_dmy_to_ymd(birth_date)
+        death_date = convert_date_dmy_to_ymd(death_date)
+
+        # Process deceased
+        # - If person died or born over 101 years ago, we can assume deceased
+        if len(death_date) != 0:
             deceased = True
-        elif deceased in ('n', 'no'):
-            deceased = False
-        else:
-            print('ERROR: Please, answer (y/n).')
 
-    comments = input('- Additional comments: ').strip()
+        if birth_date != 0:
+            try:
+                birth_year = int(birth_date[0:4])
+            except ValueError:
+                pass
+            else:
+                if birth_year <= 1919:
+                    deceased = True
+
+        # - Otherwise ask it from user
+        while deceased is None:
+            deceased = input('- Person deceased (y/n): ').strip().lower()
+            if deceased in ('y', 'yes'):
+                deceased = True
+            elif deceased in ('n', 'no'):
+                deceased = False
+            else:
+                print('ERROR: Please, answer (y/n).')
+
+        comments = input('- Additional comments: ').strip()
+
+        print('Review input for person:')
+        print('- First names: {}'.format(first_names))
+        print('- Last name: {}'.format(last_name))
+        print('- Gender: {}'.format(gender))
+        print('- Birth date: {}'.format(birth_date))
+        print('- Birth place: {}'.format(birth_place))
+        print('- Death date: {}'.format(death_date))
+        print('- Death place: {}'.format(death_place))
+        print('- Person deceased: {}'.format(deceased))
+        print('- Comments about person: {}'.format(comments))
+
+        valid_input = False
+        while not valid_input:
+            validation_input = input('Everything looks correct (y/n)? ').strip().lower()
+            if validation_input in ('y', 'yes'):
+                review_finished = True
+                valid_input = True
+            elif validation_input in ('n', 'no'):
+                print('Asking marriage information again.')
+                valid_input = True
+            else:
+                print('Please type y(es) or n(o).')
 
     # Checks and adds user to database
     person_id = initialize_person(page_number)
