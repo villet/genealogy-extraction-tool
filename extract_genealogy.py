@@ -942,10 +942,23 @@ def print_person(person_id):
     birth_date = person_data[4]
     death_date = person_data[6]
 
+
     if not first_names:
-        first_names = '[No first names]'
+        first_names = '[NK]'
     if not last_name:
-        last_name = '[No last name]'
+        last_name = '[NK]'
+
+    if birth_date:
+        if birth_date[4:] == '-XX-XX': # month and day missing
+            birth_date = birth_date[0:4]
+        elif birth_date[7:] == '-XX': # only day missing
+            birth_date = birth_date[0:7]
+
+    if death_date:
+        if death_date[4:] == '-XX-XX': # month and day missing
+            death_date = death_date[0:4]
+        elif death_date[7:] == '-XX': # only day missing
+            death_date = death_date[0:7]
 
     print_data = None
     if birth_date and death_date:
