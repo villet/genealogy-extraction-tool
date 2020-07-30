@@ -52,7 +52,7 @@ CREATE TABLE persons(
 
 CREATE TABLE relationships(
   relationship_id serial PRIMARY KEY,
-	person_id_partner1 INTEGER NOT NULL,
+	person_id_partner1 INTEGER,
 	person_id_partner2 INTEGER,
 	marriage_date VARCHAR (10),
 	marriage_place VARCHAR (255),
