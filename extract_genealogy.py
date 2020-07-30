@@ -213,7 +213,7 @@ def convert_date_dmy_to_ymd(date):
             # CHECK LENGTH (2/4 chars), NUMBER AND CONTENT (X is ok)
             date = date_parts[2] + '-' + date_parts[1] + '-' + date_parts[0]
         elif len(date_parts) == 2:
-            date = date_parts[1] + date_parts[0] + '-XX'
+            date = date_parts[1] + '-' + date_parts[0] + '-XX'
         elif len(date_parts) == 1:
             date = date_parts[0] + '-XX-XX'
         else:
