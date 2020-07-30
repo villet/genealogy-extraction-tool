@@ -857,8 +857,8 @@ def add_family(person_id_head, page_number):
         relationship_id = add_relationship(person_id_head, person_id_spouse)
 
         add_more_children = False
-        input_more_children = input('Add children to relationship {} (y/N)? '.format(
-            print_relationship(relationship_id))).lower()
+        print_relationship(relationship_id)
+        input_more_children = input('Add children to this relationship (y/N)? ').lower()
         if input_more_children in ('y', 'yes'):
             add_more_children = True
 
@@ -877,8 +877,8 @@ def add_family(person_id_head, page_number):
             if input_family in ('y', 'yes'):
                 add_family(person_id_child, page_number)
 
-            input_more_children = input('Add more children to relationship {} (Y/n)? '.format(
-                print_relationship(relationship_id))).lower()
+            print_relationship(relationship_id)
+            input_more_children = input('Add more children to this relationship (Y/n)? ').lower()
             if input_more_children in ('n', 'no'):
                 add_more_children = False
 
@@ -979,9 +979,9 @@ def print_relationship(relationship_id):
 
     Args:
         (integer) relationship_id - Relationship ID
-    Returns:
-        (string) print_data - Prepared print data
     """
+
+    print('\nRelationship:')
 
     # Read relationship data
     relationship_data = get_relationship(relationship_id)
@@ -991,45 +991,39 @@ def print_relationship(relationship_id):
     marriage_date = relationship_data[3]
     divorce_date = relationship_data[5]
 
-    # Read partner data
-    partner1_data = get_person(person_id_partner1)
-
-    partner2_data = None
-    if person_id_partner2:
-        partner2_data = get_person(person_id_partner2)
-
-    p1_first_names = partner1_data[2]
-    p1_last_name = partner1_data[3]
-
-    if person_id_partner2:
-        p2_first_names = partner2_data[2]
-        p2_last_name = partner2_data[3]
-
-    if not p1_first_names:
-        p1_first_names = '[No first names]'
-    if not p1_last_name:
-        p1_last_name = '[No last name]'
-
-    if person_id_partner2:
-        if not p2_first_names:
-            p2_first_names = '[No first names]'
-        if not p2_last_name:
-            p2_last_name = '[No last name]'
-
-    if not marriage_date:
-        marriage_date = '[No marriage date]'
-    if not divorce_date:
-        divorce_date = '[No divorce date]'
-
-    print_data = None
-    if person_id_partner2:
-        print_data = '{} {} and {} {} (m. {} - {})'.format(
-            p1_first_names, p1_last_name, p2_first_names, p2_last_name, marriage_date, divorce_date)
+    # Acquire and process person data
+    partner1_print = None
+    if person_id_partner1:
+        partner1_print = print_person(person_id_partner1)
+        print('- Partner 1: {}'.format(partner1_print))
     else:
-        print_data = '{} {} and unknown partner (m. {} - {})'.format(
-            p1_first_names, p1_last_name, marriage_date, divorce_date)
+        print('- Partner 1: [NK]')
 
-    return print_data
+    partner2_print = None
+    if person_id_partner2:
+        partner2_print = print_person(person_id_partner2)
+        print('- Partner 2: {}'.format(partner2_print))
+    else:
+        print('- Partner 2: [NK]')
+
+    # Process marriage dates
+    if marriage_date:
+        if marriage_date[4:] == '-XX-XX': # month and day missing
+            marriage_date = marriage_date[0:4]
+        elif marriage_date[7:] == '-XX': # only day missing
+            marriage_date = marriage_date[0:7]
+    if divorce_date:
+        if divorce_date[4:] == '-XX-XX': # month and day missing
+            divorce_date = divorce_date[0:4]
+        elif divorce_date[7:] == '-XX': # only day missing
+            divorce_date = divorce_date[0:7]
+
+    if marriage_date and divorce_date:
+        print('- Marriage: m. {} div. {}'.format(marriage_date, divorce_date))
+    elif marriage_date and not divorce_date:
+        print('- Marriage: m. {}'.format(marriage_date))
+    elif not marriage_date and divorce_date:
+        print('- Marriagew: div. {}'.format(divorce_date))
 
 
 def main():
