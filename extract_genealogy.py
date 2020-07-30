@@ -555,17 +555,17 @@ def add_person(page_number):
 
         # - Otherwise ask it from user
         while deceased is None:
-            deceased = input('- Person deceased (y/n): ').strip().lower()
-            if deceased in ('y', 'yes'):
+            deceased_input = input('- Person deceased (y/n): ').strip().lower()
+            if deceased_input in ('y', 'yes'):
                 deceased = True
-            elif deceased in ('n', 'no'):
+            elif deceased_input in ('n', 'no'):
                 deceased = False
             else:
-                print('ERROR: Please, answer (y/n).')
+                print('ERROR: Please, answer y(es) or n(o).')
 
         comments = input('- Additional comments: ').strip()
 
-        print('Review input for person:')
+        print('\nReview input for person:')
         print('- First names: {}'.format(first_names))
         print('- Last name: {}'.format(last_name))
         print('- Gender: {}'.format(gender))
@@ -586,7 +586,7 @@ def add_person(page_number):
                 print('Asking marriage information again.')
                 valid_input = True
             else:
-                print('Please type y(es) or n(o).')
+                print('ERROR: Please answer y(es) or n(o).')
 
     # Checks and adds user to database
     person_id = initialize_person(page_number)
@@ -643,7 +643,7 @@ def add_relationship(partner1_id, partner2_id=None):
 
         comments = input('- Comments about relationship: ').strip()
 
-        print('Review input for relationship:')
+        print('\nReview input for relationship:')
         print('- Partner 1: {}'.format(print_person(partner1_id)))
         if partner2_id is not None:
             print('- Partner 2: {}'.format(print_person(partner2_id)))
