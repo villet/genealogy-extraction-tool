@@ -539,6 +539,7 @@ def add_person(page_number):
         death_date = convert_date_dmy_to_ymd(death_date)
 
         # Process deceased
+        deceased = None # reset value if values changed
         # - If person died or born over 101 years ago, we can assume deceased
         if len(death_date) != 0:
             deceased = True
