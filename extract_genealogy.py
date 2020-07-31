@@ -648,7 +648,7 @@ def add_relationship(partner1_id, partner2_id=None):
         if partner2_id is not None:
             print('- Partner 2: {}'.format(print_person(partner2_id)))
         else:
-            print('- Partner 2: Not known')
+            print('- Partner 2: [NK]')
         if relationship_marriage not in ('n', 'N'):
             print('- Marriage date: {}'.format(marriage_date))
             print('- Marriage place: {}'.format(marriage_place))
