@@ -409,6 +409,52 @@ def update_gender(person_id, gender_name):
     return updated_rows
 
 
+def update_references(person_id, page_from, page_to):
+    """
+    Update person's page references
+
+    Args:
+        (integer) person_id - Person's ID
+        (integer) page_from - Person comes from page (or other reference)
+        (integer) page_to - Person goes to page (or other reference)
+    Returns:
+        (int) updated_rows - How many rows updated
+    """
+
+    sql = """ UPDATE persons SET page_from = {}, page_to = {} WHERE person_id = {}"""
+
+    # Check for empty values
+    if not page_from:
+        page_from = 'NULL'
+    if not page_to:
+        page_to = 'NULL'
+
+    conn = None
+    updated_rows = 0
+    try:
+        # read database configuration
+        params = config()
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the UPDATE  statement
+        cur.execute(sql.format(page_from, page_to, person_id))
+        # get the number of updated rows
+        updated_rows = cur.rowcount
+        # Commit the changes to the database
+        conn.commit()
+        # Close communication with the PostgreSQL database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return updated_rows
+
+
 def get_person(person_id):
     """
     Get personal data saved in database
@@ -515,6 +561,8 @@ def add_person(page_number):
     death_date = None
     death_place = None
     deceased = None
+    page_from = None
+    page_to = None
     comments = None
 
 
@@ -563,6 +611,12 @@ def add_person(page_number):
             else:
                 print('ERROR: Please, answer y(es) or n(o).')
 
+        # Add from and to page references
+        reference_input = input('Add page references (y/N)? ').strip().lower()
+        if reference_input in ('y', 'yes'):
+            page_from = input_integer('  - Person comes from page: ', True)
+            page_to = input_integer('  - Person goes to page: ', True)
+
         comments = input('- Additional comments: ').strip()
 
         print('\nReview input for person:')
@@ -574,6 +628,9 @@ def add_person(page_number):
         print('- Death date: {}'.format(death_date))
         print('- Death place: {}'.format(death_place))
         print('- Person deceased: {}'.format(deceased))
+        if reference_input in ('y', 'yes'):
+            print('- Page from: {}'.format(page_from))
+            print('- Page to: {}'.format(page_to))
         print('- Comments about person: {}'.format(comments))
 
         valid_input = False
@@ -598,10 +655,13 @@ def add_person(page_number):
     update_date(person_id, 'death', death_date)
     update_place(person_id, 'death', death_place)
 
-    update_comments(person_id, 'person', comments)
-
     update_gender(person_id, gender)
     update_boolean('person_id', person_id, 'deceased', deceased, 'persons')
+
+    update_references(person_id, page_from, page_to)
+
+    update_comments(person_id, 'person', comments)
+
 
     # Print saved data
     saved_data = get_person(person_id)

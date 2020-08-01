@@ -13,6 +13,11 @@
 ##### Added
 - Extended person extraction for entire family line
 
+#### 1.0.2 - 2020-08-01
+
+##### Added
+- Added "From" and "To" page (or for other similar) references
+
 ## Data Extraction Tool for Family History Book
 
 ### Background
@@ -40,7 +45,7 @@ The tool uses the following structure for database:
 <pre><code>
 CREATE TABLE persons(
 	person_id serial PRIMARY KEY,
-	page_number integer NOT NULL,
+	page_number INTEGER NOT NULL,
 	first_names VARCHAR (100),
 	last_name VARCHAR (100),
 	gender VARCHAR(30),
@@ -48,6 +53,8 @@ CREATE TABLE persons(
 	birth_place VARCHAR (255),
 	death_date VARCHAR (10),
 	death_place VARCHAR (255),
+	page_from INTEGER,
+	page_to INTEGER,
 	comments VARCHAR (255));
 
 CREATE TABLE relationships(
