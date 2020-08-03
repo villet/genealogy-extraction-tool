@@ -424,9 +424,9 @@ def update_references(person_id, page_from, page_to):
     sql = """ UPDATE persons SET page_from = {}, page_to = {} WHERE person_id = {}"""
 
     # Check for empty values
-    if not page_from:
+    if page_from is None:
         page_from = 'NULL'
-    if not page_to:
+    if page_to is None:
         page_to = 'NULL'
 
     conn = None
@@ -909,9 +909,10 @@ def add_family(person_id_head, page_number):
         if spouse_known not in ('n', 'no'):
             page_number_new = input_integer('Provide page number (default {}): '.format(
                 page_number))
-            if len(page_number_new) != 0:
+            if page_number_new is not None:
                 page_number = page_number_new
 
+            print(page_number)
             person_id_spouse = add_person(page_number)
 
         relationship_id = add_relationship(person_id_head, person_id_spouse)
@@ -925,7 +926,7 @@ def add_family(person_id_head, page_number):
         while add_more_children:
             page_number_new = input_integer('Provide page number (default {}): '.format(
                 page_number))
-            if len(page_number_new) != 0:
+            if page_number_new is not None:
                 page_number = page_number_new
 
             person_id_child = add_person(page_number)
@@ -957,7 +958,7 @@ def input_integer(input_message, allow_empty=True, allow_zero=False):
         (integer) allow_empty - Allow empty input (enabled by default)
         (integer) allow_zero - Allow zero as input (disabled by default)
     Returns:
-        (string/integer) read_input - Input read
+        (string/integer/none) read_input - Input read
     """
 
     valid_input = False
@@ -978,6 +979,7 @@ def input_integer(input_message, allow_empty=True, allow_zero=False):
                     print('ERROR: Please, provide value larger than zero.')
         else:
             if allow_empty:
+                read_input = None
                 valid_input = True
             else:
                 print('ERROR: Please, provide a non-empty value.')
@@ -1101,7 +1103,7 @@ def main():
             else:
                 page_number_new = input_integer('Provide page number (default {}): '.format(
                     page_number))
-                if len(page_number_new) != 0:
+                if page_number_new is not None:
                     page_number = page_number_new
 
             person_id = add_person(page_number)
