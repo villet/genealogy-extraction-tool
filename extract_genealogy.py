@@ -867,7 +867,6 @@ def add_family(person_id_head, page_number):
             if page_number_new is not None:
                 page_number = page_number_new
 
-            print(page_number)
             person_id_spouse = add_person(page_number)
 
         relationship_id = add_relationship(person_id_head, person_id_spouse)
