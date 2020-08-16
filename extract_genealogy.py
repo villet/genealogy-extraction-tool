@@ -40,27 +40,63 @@ def initialize_person(page_number):
     return person_id
 
 
-def update_names(person_id, first_names, last_name):
+def modify_person(person_id, column_names, column_values):
     """
-    Update person's first and last names
+    Adds or modifies person data
 
     Args:
-        (integer) person_id - Person ID
-        (string) first_names - Person's first and middle names
-        (string) last_name - Person's last (maiden name)
+        (integer) person_id - Person's ID
+        (list) column_names - Names of columns
+        (list) column_values - Values of columns
     Returns:
         (int) updated_rows - How many rows updated
     """
 
-    sql = """ UPDATE persons
-                SET first_names = '{}', last_name = '{}'
-                WHERE person_id = {}"""
+    sql = "UPDATE persons SET "
 
-#    # Change ' with '' for SQL input compatibility
-#    if name.find('\'') != -1:
-#        name.replace('\'', '\'\'')
+    # Supported column names and types
+    integer_columns = ['page_number', 'page_from', 'page_to']
+    boolean_columns = ['deceased']
+    string_columns = ['first_names', 'last_name', 'birth_date',
+                      'birth_place', 'death_date', 'death_place',
+                      'comments', 'gender']
 
+    first_column = True
+    for column_name, column_value in zip(column_names, column_values):
 
+        # SET list separated by commas
+        if not first_column:
+            sql = sql + ', '
+
+        # Add columns to SQL command by type
+        if column_name in integer_columns:
+            if column_value is None:
+                column_value = 'NULL' # Changing to SQL-supported type
+            sql = sql + '{} = {}'.format(column_name, column_value)
+
+        elif column_name in boolean_columns:
+            sql = sql + '{} = {}'.format(column_name, column_value)
+
+        elif column_name in string_columns:
+            if len(column_value) == 0:
+                column_value = 'NULL' # Empty strings should be NULL
+            else:
+                # Change ' characters with '' for SQL input compatibility
+                if column_value.find('\'') != -1:
+                    column_value.replace('\'', '\'\'')
+
+                column_value = "'" + column_value + "'" # Strings within '' in SQL
+
+            sql = sql + '{} = {}'.format(column_name, column_value)
+        else:
+            print("ERROR: Unsupported column name '{}'".format(column_name))
+
+        if first_column:
+            first_column = False
+
+    sql = sql + ' WHERE person_id = {}'.format(person_id)
+
+    # Save values to PostgreSQL database
     conn = None
     updated_rows = 0
     try:
@@ -71,117 +107,7 @@ def update_names(person_id, first_names, last_name):
         # create a new cursor
         cur = conn.cursor()
         # execute the UPDATE  statement
-        cur.execute(sql.format(first_names, last_name, person_id))
-        # get the number of updated rows
-        updated_rows = cur.rowcount
-        # Commit the changes to the database
-        conn.commit()
-        # Close communication with the PostgreSQL database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-
-    return updated_rows
-
-
-def update_date(value_id, event_type, date):
-    """
-    Update a date value in a person or relationship
-
-    Args:
-        (integer) value_id - Person or relationship ID
-        (string) event_type - Type of event matching with a column (birth etc.)
-        (string) date - Date in "YYYY-MM-DD" format
-    Returns:
-        (int) updated_rows - How many rows updated
-    """
-
-    sql = None
-    if event_type in ('birth', 'death'):
-        sql = """ UPDATE persons
-                    SET {}_date = {}
-                    WHERE person_id = {}"""
-    elif event_type in ('marriage', 'divorce'):
-        sql = """ UPDATE relationships
-                    SET {}_date = {}
-                    WHERE relationship_id = {}"""
-
-    if len(date) == 0:
-        date = 'NULL'
-    else:
-        date = "'" + date + "'" # added string need to be within '-characters
-
-    conn = None
-    updated_rows = 0
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the UPDATE  statement
-        cur.execute(sql.format(event_type, date, value_id))
-        # get the number of updated rows
-        updated_rows = cur.rowcount
-        # Commit the changes to the database
-        conn.commit()
-        # Close communication with the PostgreSQL database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-
-    return updated_rows
-
-
-def update_place(value_id, event_type, place):
-    """
-    Update a place value in a person or relationship
-
-    Args:
-        (integer) value_id - Person or relationship ID
-        (string) event_type - Type of event matching with a column (birth etc.)
-        (string) place - Name of place
-    Returns:
-        (int) updated_rows - How many rows updated
-    """
-
-    sql = None
-    if event_type in ('birth', 'death'):
-        sql = """ UPDATE persons
-                    SET {}_place = {}
-                    WHERE person_id = {}"""
-    elif event_type in ('marriage', 'divorce'):
-        sql = """ UPDATE relationships
-                    SET {}_place = {}
-                    WHERE relationship_id = {}"""
-
-#    # Change ' with '' for SQL input compatibility
-#    if name.find('\'') != -1:
-#        name.replace('\'', '\'\'')
-
-    if len(place) == 0:
-        place = 'NULL'
-    else:
-        place = "'" + place + "'" # added string need to be within '-characters
-
-    conn = None
-    updated_rows = 0
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the UPDATE  statement
-        cur.execute(sql.format(event_type, place, value_id))
+        cur.execute(sql)
         # get the number of updated rows
         updated_rows = cur.rowcount
         # Commit the changes to the database
@@ -219,195 +145,6 @@ def convert_date_dmy_to_ymd(date):
         else:
             print('Not a valid date: {}. Date not converted.'.format(date))
     return date
-
-def update_comments(value_id, comment_type, comments):
-    """
-    Update a comment value in a person
-
-    Args:
-        (integer) value_id - Person or relationship ID
-        (string) comment_type - 'person' or 'relationship'
-        (string) comments - Comments about the person or relationship
-    Returns:
-        (int) updated_rows - How many rows updated
-    """
-
-    sql = None
-    if comment_type == 'person':
-        sql = """ UPDATE persons
-                    SET comments = {}
-                    WHERE person_id = {}"""
-    elif comment_type == 'relationship':
-        sql = """ UPDATE relationships
-                    SET comments = {}
-                    WHERE relationship_id = {}"""
-
-    if len(comments) == 0:
-        comments = 'NULL'
-    else:
-        comments = "'" + comments + "'" # added string need to be within '-characters
-
-#    # Change ' with '' for SQL input compatibility
-#    if name.find('\'') != -1:
-#        name.replace('\'', '\'\'')
-
-    conn = None
-    updated_rows = 0
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the UPDATE  statement
-        cur.execute(sql.format(comments, value_id))
-        # get the number of updated rows
-        updated_rows = cur.rowcount
-        # Commit the changes to the database
-        conn.commit()
-        # Close communication with the PostgreSQL database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-
-    return updated_rows
-
-
-def update_boolean(value_name, value_id, boolean_name, boolean_value, table_name):
-    """
-    Generic function to update a boolean value in database
-
-    Args:
-        (string) value_name - Name of ID
-        (integer) value_id - ID value
-        (string) boolean_name - Name of boolean value
-        (string) boolean_valye - 'TRUE' or 'FALSE'
-        (string) table_name - table name in database
-    Returns:
-        (int) updated_rows - How many rows updated
-    """
-
-    sql = """ UPDATE {} SET {} = {} WHERE {} = {}"""
-
-    conn = None
-    updated_rows = 0
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the UPDATE  statement
-        cur.execute(sql.format(table_name, boolean_name, boolean_value, value_name, value_id))
-        # get the number of updated rows
-        updated_rows = cur.rowcount
-        # Commit the changes to the database
-        conn.commit()
-        # Close communication with the PostgreSQL database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-
-    return updated_rows
-
-
-def update_gender(person_id, gender_name):
-    """
-    Update person's gender
-
-    Args:
-        (integer) person_id - Person's ID
-        (string) gender_name - Name of gender (usually 'MALE' or 'FEMALE')
-    Returns:
-        (int) updated_rows - How many rows updated
-    """
-
-    sql = """ UPDATE persons SET gender = {} WHERE person_id = {}"""
-
-    if len(gender_name) == 0:
-        gender_name = 'NULL'
-    else:
-        gender_name = "'" + gender_name + "'" # added string need to be within '-characters
-
-
-    conn = None
-    updated_rows = 0
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the UPDATE  statement
-        cur.execute(sql.format(gender_name, person_id))
-        # get the number of updated rows
-        updated_rows = cur.rowcount
-        # Commit the changes to the database
-        conn.commit()
-        # Close communication with the PostgreSQL database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-
-    return updated_rows
-
-
-def update_references(person_id, page_from, page_to):
-    """
-    Update person's page references
-
-    Args:
-        (integer) person_id - Person's ID
-        (integer) page_from - Person comes from page (or other reference)
-        (integer) page_to - Person goes to page (or other reference)
-    Returns:
-        (int) updated_rows - How many rows updated
-    """
-
-    sql = """ UPDATE persons SET page_from = {}, page_to = {} WHERE person_id = {}"""
-
-    # Check for empty values
-    if page_from is None:
-        page_from = 'NULL'
-    if page_to is None:
-        page_to = 'NULL'
-
-    conn = None
-    updated_rows = 0
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the UPDATE  statement
-        cur.execute(sql.format(page_from, page_to, person_id))
-        # get the number of updated rows
-        updated_rows = cur.rowcount
-        # Commit the changes to the database
-        conn.commit()
-        # Close communication with the PostgreSQL database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-
-    return updated_rows
 
 
 def get_person(person_id):
@@ -602,21 +339,15 @@ def add_person(page_number):
 
     # Checks and adds user to database
     person_id = initialize_person(page_number)
-    update_names(person_id, first_names, last_name)
 
-    update_date(person_id, 'birth', birth_date)
-    update_place(person_id, 'birth', birth_place)
-
-    update_date(person_id, 'death', death_date)
-    update_place(person_id, 'death', death_place)
-
-    update_gender(person_id, gender)
-    update_boolean('person_id', person_id, 'deceased', deceased, 'persons')
-
-    update_references(person_id, page_from, page_to)
-
-    update_comments(person_id, 'person', comments)
-
+    # Add other person information
+    column_names = ['first_names', 'last_name', 'birth_date', 'birth_place',
+                    'death_date', 'death_place', 'comments', 'gender',
+                    'deceased', 'page_from', 'page_to']
+    column_values = [first_names, last_name, birth_date, birth_place,
+                     death_date, death_place, comments, gender,
+                     deceased, page_from, page_to]
+    modify_person(person_id, column_names, column_values)
 
     # Print saved data
     saved_data = get_person(person_id)
@@ -687,12 +418,14 @@ def add_relationship(partner1_id, partner2_id=None):
     relationship_id = initialize_relationship(partner1_id, partner2_id)
 
     if relationship_marriage not in ('n', 'N'):
-        update_date(relationship_id, 'marriage', convert_date_dmy_to_ymd(marriage_date))
-        update_place(relationship_id, 'marriage', marriage_place)
-        update_date(relationship_id, 'divorce', convert_date_dmy_to_ymd(divorce_date))
-        update_place(relationship_id, 'divorce', divorce_place)
+        marriage_date = convert_date_dmy_to_ymd(marriage_date)
+        divorce_date = convert_date_dmy_to_ymd(divorce_date)
 
-    update_comments(relationship_id, 'relationship', comments)
+    column_names = ['marriage_date', 'marriage_place', 'divorce_date',
+                    'divorce_place', 'comments']
+    column_values = [marriage_date, marriage_place, divorce_date,
+                     divorce_place, comments]
+    modify_relationship(relationship_id, column_names, column_values)
 
     # Print saved data
     saved_data = get_relationship(relationship_id)
@@ -742,6 +475,84 @@ def initialize_relationship(partner1_id, partner2_id):
             conn.close()
 
     return relationship_id
+
+
+def modify_relationship(relationship_id, column_names, column_values):
+    """
+    Adds or modifies relationship data
+
+    Args:
+        (integer) relatinship_id - Relationship ID
+        (list) column_names - Names of columns
+        (list) column_values - Values of columns
+    Returns:
+        (int) updated_rows - How many rows updated
+    """
+
+    sql = "UPDATE relationships SET "
+
+    # Supported column names and types
+    integer_columns = ['person_id_partner1', 'person_id_partner2']
+    string_columns = ['marriage_date', 'marriage_place', 'divorce_date',
+                      'divorce_place', 'comments']
+
+    first_column = True
+    for column_name, column_value in zip(column_names, column_values):
+
+        # SET list separated by commas
+        if not first_column:
+            sql = sql + ', '
+
+        # Add columns to SQL command by type
+        if column_name in integer_columns:
+            if column_value is None:
+                column_value = 'NULL' # Changing to SQL-supported type
+            sql = sql + '{} = {}'.format(column_name, column_value)
+
+        elif column_name in string_columns:
+            if len(column_value) == 0:
+                column_value = 'NULL' # Empty strings should be NULL
+            else:
+                # Change ' characters with '' for SQL input compatibility
+                if column_value.find('\'') != -1:
+                    column_value.replace('\'', '\'\'')
+
+                column_value = "'" + column_value + "'" # Strings within '' in SQL
+
+            sql = sql + '{} = {}'.format(column_name, column_value)
+        else:
+            print("ERROR: Unsupported column name '{}'".format(column_name))
+
+        if first_column:
+            first_column = False
+
+    sql = sql + ' WHERE relationship_id = {}'.format(relationship_id)
+
+    # Save values to PostgreSQL database
+    conn = None
+    updated_rows = 0
+    try:
+        # read database configuration
+        params = config()
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the UPDATE  statement
+        cur.execute(sql)
+        # get the number of updated rows
+        updated_rows = cur.rowcount
+        # Commit the changes to the database
+        conn.commit()
+        # Close communication with the PostgreSQL database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return updated_rows
 
 
 def add_child(relationship_id, person_id, verbose=False):
