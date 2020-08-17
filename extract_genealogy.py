@@ -147,12 +147,14 @@ def convert_date_dmy_to_ymd(date):
     return date
 
 
-def get_person(person_id):
+def get_database_row(id_name, id_value, table_name):
     """
-    Get personal data saved in database
+    Get a row from database by ID number
 
     Args:
-        (integer) person_id - Person ID
+        (string) id_name - Name if ID column
+        (integer) id_value - ID number
+        (string) table_name - Name of table
     Returns:
         (tuple) person_data - Personal data
     """
@@ -162,8 +164,10 @@ def get_person(person_id):
         params = config()
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
-        cur.execute("SELECT * FROM persons WHERE person_id = {}".format(person_id))
-        person_data = cur.fetchone()
+        cur.execute("SELECT * FROM {} WHERE {} = {}".format(table_name, id_name, id_value))
+
+        values = cur.fetchone() # Values as tuple
+        columns = [desc[0] for desc in cur.description] # columns as list
 
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -172,65 +176,73 @@ def get_person(person_id):
         if conn is not None:
             conn.close()
 
-    return person_data
+    return columns, values
 
 
-def get_relationship(relationship_id):
+def get_person(person_id, print_values=False):
+    """
+    Get personal data saved in database
+
+    Args:
+        (integer) person_id - Person ID
+    Returns:
+        (list) columns - Data columns
+        (tuple) values - Data values
+    """
+
+    columns, values = get_database_row('person_id', person_id, 'persons')
+
+    # Optionally print saved values
+    if print_values:
+        print('Person values in database:')
+        for column, value in zip(columns, values):
+            print('"{}": "{}"'.format(column, value))
+
+    return columns, values
+
+
+def get_relationship(relationship_id, print_values=False):
     """
     Get relationship data saved in database
 
     Args:
         (integer) relationship_id - Relationship ID
     Returns:
-        (tuple) relationship_data - Relationship data
+        (list) columns - Data columns
+        (tuple) values - Data values
     """
 
-    conn = None
-    try:
-        params = config()
-        conn = psycopg2.connect(**params)
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM relationships WHERE relationship_id = {}".format(
-            relationship_id))
-        relationship_data = cur.fetchone()
+    columns, values = get_database_row('relationship_id', relationship_id, 'relationships')
 
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
+    # Optionally print saved values
+    if print_values:
+        print('Relationship values in database:')
+        for column, value in zip(columns, values):
+            print('"{}": "{}"'.format(column, value))
 
-    return relationship_data
+    return columns, values
 
 
-def get_child(child_id):
+def get_child(child_id, print_values=False):
     """
     Get child data saved in database
 
     Args:
         (integer) child_id - Child ID
     Returns:
-        (tuple) child_data - Child data
+        (list) columns - Data columns
+        (tuple) values - Data values
     """
 
-    conn = None
-    try:
-        params = config()
-        conn = psycopg2.connect(**params)
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM children WHERE person_id = {}".format(
-            child_id))
-        child_data = cur.fetchone()
+    columns, values = get_database_row('child_id', child_id, 'children')
 
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
+    # Optionally print saved values
+    if print_values:
+        print('Child values in database:')
+        for column, value in zip(columns, values):
+            print('"{}": "{}"'.format(column, value))
 
-    return child_data
+    return columns, values
 
 
 def add_person(page_number):
@@ -350,8 +362,7 @@ def add_person(page_number):
     modify_person(person_id, column_names, column_values)
 
     # Print saved data
-    saved_data = get_person(person_id)
-    print(saved_data)
+    get_person(person_id, print_values=True)
 
     return person_id
 
@@ -428,8 +439,7 @@ def add_relationship(partner1_id, partner2_id=None):
     modify_relationship(relationship_id, column_names, column_values)
 
     # Print saved data
-    saved_data = get_relationship(relationship_id)
-    print(saved_data)
+    get_relationship(relationship_id, print_values=True)
 
     return relationship_id
 
@@ -610,9 +620,7 @@ def add_child(relationship_id, person_id, verbose=False):
     child_id = initialize_child(relationship_id, person_id)
 
     # Print saved data
-    saved_data = get_child(person_id)
-    print(saved_data)
-    print('Child added')
+    get_child(child_id, print_values=True)
 
     return child_id
 
@@ -762,7 +770,7 @@ def print_person(person_id):
         (string) print_data - Prepared print data
     """
 
-    person_data = get_person(person_id)
+    person_columns, person_data = get_person(person_id)
 
     first_names = person_data[2]
     last_name = person_data[3]
@@ -811,7 +819,7 @@ def print_relationship(relationship_id):
     print('\nRelationship:')
 
     # Read relationship data
-    relationship_data = get_relationship(relationship_id)
+    relationship_columns, relationship_data = get_relationship(relationship_id)
 
     person_id_partner1 = relationship_data[1]
     person_id_partner2 = relationship_data[2]
