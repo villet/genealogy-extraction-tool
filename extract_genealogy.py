@@ -1,6 +1,63 @@
 import psycopg2
 from config import config
 
+def initialize_database_row(id_name, column_names, column_values, table_name):
+    """
+    Adds a row in given table with initial data
+
+    Args:
+        (string list) column_names - Column names
+        (integer list) column_values - Column values
+        (string) table_name - Table name
+    Returns:
+        (int) id_number - ID number
+    """
+
+    # Create strings for added column data
+    column_list = None
+    value_list = None
+    first_column = True
+    for column_name, column_value in zip(column_names, column_values):
+        if column_value is None:
+            column_value = 'NULL' # Changing to SQL-supported type
+
+        if first_column:
+            column_list = column_name
+            value_list = str(column_value)
+            first_column = False
+        else:
+            column_list = column_list + ', ' + column_name
+            value_list = value_list + ', ' + str(column_value)
+
+    sql = 'INSERT INTO {} ({}) VALUES({}) RETURNING {};'.format(table_name, column_list,
+                                                                value_list, id_name)
+
+    conn = None
+    id_number = None
+    try:
+        # read database configuration
+        params = config()
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the INSERT statement
+        cur.execute(sql)
+        # get the generated ID back
+        id_number = cur.fetchone()[0]
+        # commit the changes to the database
+        conn.commit()
+        # close communication with the database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return id_number
+
+
 def initialize_person(page_number):
     """
     Inserts a person into database
@@ -11,31 +68,11 @@ def initialize_person(page_number):
         (int) person_id - Person ID
     """
 
-    sql = """INSERT INTO persons(page_number) VALUES({})
-          RETURNING person_id;"""
+    column_names = ['page_number']
+    column_values = [page_number]
 
-    conn = None
-    person_id = None
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the INSERT statement
-        cur.execute(sql.format(page_number))
-        # get the generated UID back
-        person_id = cur.fetchone()[0]
-        # commit the changes to the database
-        conn.commit()
-        # close communication with the database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
+    person_id = initialize_database_row('person_id', column_names,
+                                        column_values, 'persons')
 
     return person_id
 
@@ -455,34 +492,11 @@ def initialize_relationship(partner1_id, partner2_id):
         (int) relationship_id - Saved Relationship ID
     """
 
-    sql = """INSERT INTO relationships(person_id_partner1, person_id_partner2) VALUES({}, {})
-          RETURNING relationship_id;"""
+    column_names = ['person_id_partner1', 'person_id_partner2']
+    column_values = [partner1_id, partner2_id]
 
-    if partner2_id is None:
-        partner2_id = 'NULL'
-
-    conn = None
-    relationship_id = None
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the INSERT statement
-        cur.execute(sql.format(partner1_id, partner2_id))
-        # get the generated UID back
-        relationship_id = cur.fetchone()[0]
-        # commit the changes to the database
-        conn.commit()
-        # close communication with the database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
+    relationship_id = initialize_database_row('relationship_id', column_names,
+                                              column_values, 'relationships')
 
     return relationship_id
 
@@ -520,7 +534,9 @@ def modify_relationship(relationship_id, column_names, column_values):
             sql = sql + '{} = {}'.format(column_name, column_value)
 
         elif column_name in string_columns:
-            if len(column_value) == 0:
+            if column_value is None:
+                column_value = 'NULL' # Changing to SQL-supported type
+            elif len(column_value) == 0:
                 column_value = 'NULL' # Empty strings should be NULL
             else:
                 # Change ' characters with '' for SQL input compatibility
@@ -636,31 +652,11 @@ def initialize_child(relationship_id, person_id):
         (int) child_id - Saved Child ID
     """
 
-    sql = """INSERT INTO children(relationship_id, person_id) VALUES({}, {})
-          RETURNING child_id;"""
+    column_names = ['relationship_id', 'person_id']
+    column_values = [relationship_id, person_id]
 
-    conn = None
-    child_id = None
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the INSERT statement
-        cur.execute(sql.format(relationship_id, person_id))
-        # get the generated UID back
-        child_id = cur.fetchone()[0]
-        # commit the changes to the database
-        conn.commit()
-        # close communication with the database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
+    child_id = initialize_database_row('child_id', column_names,
+                                       column_values, 'children')
 
     return child_id
 
